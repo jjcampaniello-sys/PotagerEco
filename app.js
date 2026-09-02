@@ -40,16 +40,6 @@ const CATEGORIES = {
     FLEUR_AMIE: "Fleurs Bénéfiques & Pollinisatrices"
 };
 
-// Compatibilité d'exposition enrichie (SUD_EST prend en charge le soleil et la mi-ombre)
-const COMPATIBILITE_EXPOSITION = {
-    "SUD": ["SUD", "MI_OMBRE"],
-    "SUD_OUEST": ["SUD", "MI_OMBRE"],
-    "SUD_EST": ["SUD", "MI_OMBRE"],
-    "OUEST": ["SUD", "MI_OMBRE"],
-    "EST": ["MI_OMBRE", "OMBRE"],
-    "NORD": ["OMBRE", "MI_OMBRE"]
-};
-
 const REGLES_DISTANCES = {
     PROTECTION_SANITAIRE: { icone: "🛡️", libelle: "Protection contre parasites/nuisibles" },
     POLLINISATION: { icone: "🐝", libelle: "Attraction des pollinisateurs" },
@@ -57,63 +47,58 @@ const REGLES_DISTANCES = {
     INCOMPATIBILITE: { icone: "⚠️", libelle: "Incompatibilité / Éloignement recommandé" }
 };
 
-// Catalogue complet incluant les Légumineuses (Pois, Haricots) adaptées au Sud-Est
+// Catalogue complet des plantes avec mois de plantation (0 = Janvier, 4 = Mai, etc.)
 const catalogueInitial = [
     { 
         id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
-        semis: "Mars - Avril", repiquage: "Mai", moisPlantationMin: 4, moisPlantationMax: 5, joursMaturation: 75, distanceMin: 45,
-        descriptionRole: "Profite du basilic (stimulant) et de l'œillet d'Inde (pucerons/nématodes)."
+        semis: "Mars - Avril", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 75, distanceMin: 45,
+        descriptionRole: "Bénéficie du basilic (stimulation/saveur) et de l'œillet d'Inde (protection)."
     },
     { 
         id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
-        semis: "Avril - Mai", repiquage: "Mai - Juin", moisPlantationMin: 4, moisPlantationMax: 5, joursMaturation: 60, distanceMin: 60,
-        descriptionRole: "A besoin des pollinisateurs attirés par la bourrache."
+        semis: "Avril - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 60,
+        descriptionRole: "Nécessite la présence de pollinisateurs attirés par la bourrache."
     },
     { 
         id: "haricot_vert", nom: "Haricot Vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", 
-        semis: "Avril - Juillet", repiquage: "Semis direct", moisPlantationMin: 3, moisPlantationMax: 6, joursMaturation: 60, distanceMin: 20,
-        descriptionRole: "Fixe l'azote de l'air dans le sol, idéal pour enrichir la terre des légumes voisins."
-    },
-    { 
-        id: "pois", nom: "Pois Gourmand", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", 
-        semis: "Février - Avril", repiquage: "Semis direct", moisPlantationMin: 1, moisPlantationMax: 3, joursMaturation: 70, distanceMin: 15,
-        descriptionRole: "Excellente légumineuse de printemps, très adaptée aux expositions Sud-Est."
+        semis: "Avril - Juillet", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 60, distanceMin: 20,
+        descriptionRole: "Fixe l'azote dans le sol pour stimuler les plantes voisines."
     },
     { 
         id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", 
-        semis: "Mars - Septembre", repiquage: "Avril - Octobre", moisPlantationMin: 2, moisPlantationMax: 8, joursMaturation: 45, distanceMin: 25,
-        descriptionRole: "Profite de l'ombre portée des grands légumes."
+        semis: "Mars - Septembre", repiquage: "Avril - Octobre", moisMiseEnTerre: 3, moisMax: 8, joursMaturation: 45, distanceMin: 25,
+        descriptionRole: "Culture rapide s'épanouissant à l'ombre des grands légumes."
     },
     { 
         id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
-        semis: "Mars - Juillet", repiquage: "Semis direct", moisPlantationMin: 2, moisPlantationMax: 6, joursMaturation: 80, distanceMin: 10,
+        semis: "Mars - Juillet", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 6, joursMaturation: 80, distanceMin: 10,
         descriptionRole: "Sensible à la mouche de la carotte."
     },
     { 
         id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", 
-        semis: "Avril - Mai", repiquage: "Mai", moisPlantationMin: 4, moisPlantationMax: 5, joursMaturation: 30, distanceMin: 20,
-        descriptionRole: "Stimule la croissance de la tomate et repousse le mildiou."
+        semis: "Avril - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 30, distanceMin: 20,
+        descriptionRole: "Stimule la croissance de la tomate et éloigne le mildiou."
     },
     { 
         id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
-        semis: "Mars - Avril", repiquage: "Mai", moisPlantationMin: 3, moisPlantationMax: 5, joursMaturation: 50, distanceMin: 15,
-        descriptionRole: "🛡️ Répulse nématodes du sol et pucerons."
+        semis: "Mars - Avril", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 50, distanceMin: 15,
+        descriptionRole: "🛡️ Fleur protectrice contre les pucerons et nématodes."
     },
     { 
         id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
-        semis: "Mars - Mai", repiquage: "Semis direct", moisPlantationMin: 2, moisPlantationMax: 4, joursMaturation: 45, distanceMin: 30,
-        descriptionRole: "🐝 Attire massivement les pollinisateurs."
+        semis: "Mars - Mai", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 45, distanceMin: 30,
+        descriptionRole: "🐝 Fleur mellifère attirant les insectes pollinisateurs."
     }
 ];
 
 const MATRICE_ASSOCIATIONS = {
     tomate: {
-        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ L'Œillet d'Inde protège la tomate des nématodes et pucerons." },
-        basilic: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Le basilic stimule la croissance de la tomate et améliore sa saveur." },
-        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot apporte de l'azote assimilable au pied de la tomate." }
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ L'Œillet d'Inde repousse les nématodes et pucerons." },
+        basilic: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Le basilic stimule la pousse de la tomate et améliore sa saveur." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot fournit de l'azote assimilable au pied de la tomate." }
     },
     courgettes: {
-        bourrache: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 La Bourrache attire les abeilles indispensables pour féconder les fleurs." }
+        bourrache: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 La Bourrache attire les abeilles indispensables à la formation des courgettes." }
     }
 };
 
@@ -122,17 +107,17 @@ let plantes = [...catalogueInitial];
 window.zoneClimatiqueActuelle = { nom: "Standard", decalageJours: 0 };
 
 // =================================================================
-// 2. INITIALISATION ET STOCKAGE
+// 2. STOCKAGE ET INITIALISATION
 // =================================================================
 
 function sauvegarderDonnees() {
-    localStorage.setItem("potager_carres_v9", JSON.stringify(carres));
-    localStorage.setItem("potager_plantes_v9", JSON.stringify(plantes));
+    localStorage.setItem("potager_carres_v10", JSON.stringify(carres));
+    localStorage.setItem("potager_plantes_v10", JSON.stringify(plantes));
 }
 
 function chargerDonneesStockees() {
-    const carresStockes = localStorage.getItem("potager_carres_v9");
-    const plantesStockees = localStorage.getItem("potager_plantes_v9");
+    const carresStockes = localStorage.getItem("potager_carres_v10");
+    const plantesStockees = localStorage.getItem("potager_plantes_v10");
 
     if (plantesStockees) plantes = JSON.parse(plantesStockees);
 
@@ -188,7 +173,7 @@ function calculerDistanceEntreCases(index1, index2, tailleCaseCm = 30) {
 }
 
 // =================================================================
-// 3. AFFICHAGE ET GESTION
+// 3. AFFICHAGE ET SUPPRESSION DES CARRÉS
 // =================================================================
 
 function renderCarres() {
@@ -213,11 +198,27 @@ function renderCarres() {
         htmlGrille += `</div>`;
 
         container.innerHTML += `
-            <div class="item-card">
-                <h4>Carré #${c.id} (${c.exposition})</h4>
+            <div class="item-card" style="position:relative;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h4>Carré #${c.id} (${c.exposition})</h4>
+                    <button onclick="supprimerCarreComplet(${c.id})" style="background:#ffebee; color:#c62828; border:1px solid #ef9a9a; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px;">
+                        🗑️ Supprimer le carré
+                    </button>
+                </div>
                 ${htmlGrille}
             </div>`;
     });
+}
+
+function supprimerCarreComplet(carreId) {
+    if (confirm(`Voulez-vous vraiment supprimer le carré potager #${carreId} ?`)) {
+        carres = carres.filter(c => c.id !== carreId);
+        // Réindexation simple des IDs
+        carres.forEach((c, index) => c.id = index + 1);
+        sauvegarderDonnees();
+        renderCarres();
+        renderCalendrier();
+    }
 }
 
 function libererCase(carreId, indexCase) {
@@ -249,6 +250,10 @@ function renderPlantes() {
     });
 }
 
+// =================================================================
+// 4. ASSISTANT D'ASSOCIATION
+// =================================================================
+
 function ouvrirAssistantPlantation(planteId) {
     const plante = plantes.find(p => p.id === planteId);
     if (!plante || carres.length === 0) {
@@ -264,7 +269,7 @@ function ouvrirAssistantPlantation(planteId) {
     });
 
     if (!options) {
-        alert("Tous vos carrés sont pleins.");
+        alert("Tous vos carrés potagers sont complets.");
         return;
     }
 
@@ -340,7 +345,7 @@ function getNomPlante(id) {
 }
 
 // =================================================================
-// 4. CALENDRIER COHÉRENT (GESTION DES SAISONS DE PLANTATION)
+// 5. CALENDRIER DE RÉCOLTE AVEC DATES COHÉRENTES
 // =================================================================
 
 function renderCalendrier() {
@@ -361,30 +366,31 @@ function renderCalendrier() {
     }
 
     const decalage = window.zoneClimatiqueActuelle.decalageJours;
-    const dateActuelle = new Date();
-    const moisActuel = dateActuelle.getMonth(); // 0 = Janvier, 8 = Septembre
+    const dateCourante = new Date();
+    const moisCourant = dateCourante.getMonth(); // 0 = Janvier, 8 = Septembre
 
     idsPlantesEnTerre.forEach(idPlante => {
         const infoPlante = plantes.find(p => p.id === idPlante);
         if (infoPlante) {
-            let messageRecolte = "";
+            let messageAlerteOuRecolte = "";
 
-            // Vérification si la plantation est hors saison
-            if (moisActuel < infoPlante.moisPlantationMin || moisActuel > infoPlante.moisPlantationMax) {
-                messageRecolte = `<span style="color:#c62828;">⚠️ Hors saison pour la plantation (Période recommandée : ${infoPlante.repiquage}).</span>`;
+            // Contrôle si la période actuelle est hors saison
+            if (moisCourant < infoPlante.moisMiseEnTerre || moisCourant > infoPlante.moisMax) {
+                messageAlerteOuRecolte = `<span style="color:#c62828;">⚠️ <strong>Saison dépassée :</strong> La mise en terre s'effectue habituellement en <strong>${infoPlante.repiquage}</strong>.</span>`;
             } else {
-                // Calculation basée sur la saison printanière courante
-                const dateRecolteEstimee = new Date();
-                dateRecolteEstimee.setDate(dateRecolteEstimee.getDate() + (infoPlante.joursMaturation || 60) + decalage);
-                messageRecolte = `<span style="color:#2e7d32;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolteEstimee.toLocaleDateString('fr-FR')}</span>`;
+                // Calcul basé sur la période recommandée de plantation au printemps
+                const dateCalcul = new Date(dateCourante.getFullYear(), infoPlante.moisMiseEnTerre, 15);
+                dateCalcul.setDate(dateCalcul.getDate() + (infoPlante.joursMaturation || 60) + decalage);
+
+                messageAlerteOuRecolte = `<span style="color:#2e7d32;"><strong>🌾 Récolte estimée (si planté en ${infoPlante.repiquage}) :</strong> ~${dateCalcul.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>`;
             }
 
             container.innerHTML += `
                 <div class="item-card">
                     <h4>🌱 ${infoPlante.nom}</h4>
                     <p><strong>Période de semis :</strong> ${infoPlante.semis}</p>
-                    <p><strong>Période de repiquage/plantation :</strong> ${infoPlante.repiquage}</p>
-                    <p>${messageRecolte}</p>
+                    <p><strong>Période de repiquage :</strong> ${infoPlante.repiquage}</p>
+                    <p>${messageAlerteOuRecolte}</p>
                 </div>
             `;
         }
