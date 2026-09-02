@@ -49,9 +49,10 @@ header p { margin-top: 5px; color: #666; }
 .form-row {
     flex-direction: row;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
-form-inline {
+.form-inline {
     background: #f9f9f9;
     padding: 15px;
     border-radius: 6px;
@@ -96,10 +97,20 @@ button {
 .item-card p { margin: 4px 0; font-size: 13px; }
 .badge { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
 
-/* Grille 3x3 interactive pour chaque carré potager */
+.info-zone-box {
+    margin: 15px 0;
+    padding: 10px 14px;
+    background: #e3f2fd;
+    border-left: 4px solid #1e88e5;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #0d47a1;
+}
+
+/* Grille 3x3 dynamique à taille de cases modifiables */
 .grille-potager {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    /* Propriétés grid-template-columns et grid-template-rows gérées en inline via JS */
     gap: 8px;
     margin-top: 15px;
     background: #e8f5e9;
@@ -112,30 +123,25 @@ button {
     background: #ffffff;
     border: 1px solid #a5d6a7;
     border-radius: 6px;
-    min-height: 70px;
+    min-height: 75px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: 11px;
     text-align: center;
-    padding: 4px;
-    cursor: pointer;
-    transition: background 0.2s;
+    padding: 6px;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .case-grille:hover {
     background: #f1f8e9;
 }
 
-.case-grille.drag-over {
-    background: #c8e6c9;
-    border: 2px solid #2e7d32;
-}
-
 .plante-occupee {
     font-weight: bold;
     color: #1b5e20;
+    background: #f1f8e9;
 }
 
 .btn-suppr-case {
@@ -145,5 +151,5 @@ button {
     font-weight: bold;
     cursor: pointer;
     font-size: 12px;
-    margin-top: 2px;
+    margin-top: 4px;
 }
