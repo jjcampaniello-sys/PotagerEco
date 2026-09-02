@@ -1,5 +1,5 @@
 // =================================================================
-// 1. LOGIQUE MÉTIER & CATALOGUE
+// 1. CLASSES ET DONNÉES DU POTAGER
 // =================================================================
 
 class CarrePotager {
@@ -9,14 +9,19 @@ class CarrePotager {
         this.largeur = Number(largeur);
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
-        this.plantes = [];
+        this.plantes = []; // [{ idPlante, datePlantation }]
     }
 
     getSurface() { return (this.longueur * this.largeur) / 10000; }
     getVolumeLitres() { return (this.longueur * this.largeur * this.hauteur) / 1000; }
 
-    ajouterPlante(planteId) {
-        if (!this.plantes.includes(planteId)) this.plantes.push(planteId);
+    ajouterPlante(idPlante) {
+        if (!this.plantes.some(p => p.idPlante === idPlante)) {
+            this.plantes.push({
+                idPlante: idPlante,
+                datePlantation: new Date().toISOString().split('T')[0]
+            });
+        }
     }
 }
 
@@ -38,16 +43,17 @@ const COMPATIBILITE_EXPOSITION = {
     "NORD": ["OMBRE", "MI_OMBRE"]
 };
 
+// Catalogue enrichi avec données phénologiques (semis, repiquage, jours de croissance)
 const catalogueInitial = [
-    { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
-    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
-    { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
-    { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
-    { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
-    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE" },
-    { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
-    { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD" },
-    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" }
+    { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 75 },
+    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai - Juin", joursMaturation: 60 },
+    { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Février - Mars", repiquage: "Mai", joursMaturation: 85 },
+    { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Avril - Octobre", joursMaturation: 45 },
+    { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Mars - Juillet", repiquage: "Semis direct", joursMaturation: 80 },
+    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Semis direct", joursMaturation: 25 },
+    { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Mai - Juillet", repiquage: "Semis direct", joursMaturation: 60 },
+    { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai", joursMaturation: 30 },
+    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 50 }
 ];
 
 const MATRICE_ASSOCIATIONS = {
@@ -58,119 +64,42 @@ const MATRICE_ASSOCIATIONS = {
     oeillet_inde: { amis: ["tomate", "courgettes", "poivron", "basilic"], ennemis: [] }
 };
 
-const carres = [];
-const plantes = [...catalogueInitial];
+let carres = [];
+let plantes = [...catalogueInitial];
 
 // =================================================================
-// 2. INTÉGRATION API MÉTÉO (OPEN-METEO) & PRÉVENTION
+// 2. SAUVEGARDE LOCALE & INITIALISATION
 // =================================================================
 
-async function chargerMeteoEtAlertes() {
-    const statusDiv = document.getElementById("meteo-status");
-    const container = document.getElementById("meteo-cards");
-
-    statusDiv.innerHTML = "<p>🔄 Géolocalisation et récupération des métriques...</p>";
-
-    if (!navigator.geolocation) {
-        statusDiv.innerHTML = "<p style='color:red;'>La géolocalisation n'est pas supportée par votre navigateur.</p>";
-        return;
-    }
-
-    navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        try {
-            // Requete API Open-Meteo (Sans clé API)
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,precipitation_sum&timezone=auto`;
-            const response = await fetch(url);
-            const data = await response.json();
-
-            const temp = data.current.temperature_2m;
-            const humidite = data.current.relative_humidity_2m;
-            const pluie = data.current.precipitation;
-
-            statusDiv.innerHTML = `<p style='color:green;'>📍 Données météo récupérées (Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)})</p>`;
-            
-            // Analyse des alertes
-            let alertesHtml = analyserRisquesMaladies(temp, humidite);
-            let arrosageHtml = analyserBesoinsArrosage(pluie, temp);
-
-            container.innerHTML = `
-                <div class="item-card">
-                    <h4>🌡️ Conditions Actuelles</h4>
-                    <p><strong>Température :</strong> ${temp} °C</p>
-                    <p><strong>Humidité de l'air :</strong> ${humidite} %</p>
-                    <p><strong>Précipitations :</strong> ${pluie} mm</p>
-                </div>
-                <div class="item-card">
-                    <h4>💧 Conseil Arrosage (Lasagne)</h4>
-                    ${arrosageHtml}
-                </div>
-                <div class="item-card">
-                    <h4>🛡️ Prévention Santé & Pathologies</h4>
-                    ${alertesHtml}
-                </div>
-            `;
-        } catch (error) {
-            statusDiv.innerHTML = "<p style='color:red;'>Erreur lors de la récupération des données météo.</p>";
-            console.error(error);
-        }
-    }, () => {
-        statusDiv.innerHTML = "<p style='color:red;'>Permission de géolocalisation refusée.</p>";
-    });
+function sauvegarderDonnees() {
+    localStorage.setItem("potager_carres", JSON.stringify(carres));
+    localStorage.setItem("potager_plantes", JSON.stringify(plantes));
 }
 
-function analyserBesoinsArrosage(pluie, temp) {
-    if (pluie > 5) {
-        return "<p style='color:blue;'>🌧️ Pluie suffisante. <strong>Arrosage inutile</strong> aujourd'hui. La méthode lasagne retient efficacement cette humidité.</p>";
-    } else if (temp > 28) {
-        return "<p style='color:orange;'>🔥 Forte chaleur. Arrosez <strong>au pied</strong> tôt le matin ou après le coucher du soleil pour limiter l'évaporation.</p>";
-    } else {
-        return "<p style='color:green;'>🌱 Humidité stable. Vérifiez au toucher sous la première couche de paillage si le sol demeure frais.</p>";
+function chargerDonneesStockees() {
+    const carresStockes = localStorage.getItem("potager_carres");
+    const plantesStockees = localStorage.getItem("potager_plantes");
+
+    if (plantesStockees) plantes = JSON.parse(plantesStockees);
+
+    if (carresStockes) {
+        const donneesBrutes = JSON.parse(carresStockes);
+        carres = donneesBrutes.map(c => {
+            const carre = new CarrePotager(c.id, c.longueur, c.largeur, c.hauteur, c.exposition);
+            carre.plantes = c.plantes || [];
+            return carre;
+        });
     }
 }
-
-function analyserRisquesMaladies(temp, humidite) {
-    let alertes = [];
-
-    // Alerte Mildiou (17°C <= T <= 25°C et Humidité > 80%)
-    if (temp >= 17 && temp <= 25 && humidite >= 80) {
-        alertes.push(`
-            <div style="color:red; margin-bottom:8px;">
-                🚨 <strong>Alerte Mildiou Élevée !</strong><br>
-                <em>Risque fort pour tomates et pommes de terre.</em><br>
-                <small><strong>Remèdes écoresponsables :</strong> Pulvérisez de la décoction de prêle ou du bicarbonate de soude (5g/L + savon noir). Évitez de mouiller le feuillage.</small>
-            </div>
-        `);
-    }
-
-    // Alerte Nécrose Apicale / Cul-Noir
-    if (temp >= 29) {
-        alertes.push(`
-            <div style="color:darkorange; margin-bottom:8px;">
-                ⚠️ <strong>Risque de Cul-Noir (Tomates) !</strong><br>
-                <em>Causes : Forte chaleur & régularité d'arrosage perturbée.</em><br>
-                <small><strong>Remèdes :</strong> Paillez généreusement la lasagne pour conserver un taux de calcium assimilable constant.</small>
-            </div>
-        `);
-    }
-
-    if (alertes.length === 0) {
-        return "<p style='color:green;'>✅ Aucun risque majeur de maladie cryptogamique détecté aujourd'hui.</p>";
-    }
-
-    return alertes.join("");
-}
-
-// =================================================================
-// 3. INITIALISATION DE L'APPLICATION
-// =================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+    chargerDonneesStockees();
     initSelects();
+    renderCarres();
     renderPlantes();
+    renderCalendrier();
 
+    // Ajout d'un carré
     document.getElementById("form-carre").addEventListener("submit", (e) => {
         e.preventDefault();
         const L = document.getElementById("longueur").value;
@@ -181,10 +110,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const nouveauCarre = new CarrePotager(carres.length + 1, L, l, h, expo);
         carres.push(nouveauCarre);
         
+        sauvegarderDonnees();
         renderCarres();
+        renderCalendrier();
         e.target.reset();
     });
 
+    // Ajout d'une plante sur-mesure
     document.getElementById("form-plante").addEventListener("submit", (e) => {
         e.preventDefault();
         const nom = document.getElementById("p-nom").value.trim();
@@ -194,7 +126,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!nom) return;
         const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
         
-        plantes.push({ id, nom, categorie, besoinSoleil });
+        plantes.push({ 
+            id, nom, categorie, besoinSoleil, 
+            semis: "Ajuster selon saison", 
+            repiquage: "Pleine terre", 
+            joursMaturation: 60 
+        });
+
+        sauvegarderDonnees();
         document.getElementById("filter-categorie").value = categorie;
         renderPlantes();
         e.target.reset();
@@ -202,6 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("filter-categorie").addEventListener("change", renderPlantes);
 });
+
+// =================================================================
+// 3. AFFICHAGE DES COMPOSANTS
+// =================================================================
 
 function initSelects() {
     const selectCat = document.getElementById("p-categorie");
@@ -233,7 +176,7 @@ function renderCarres() {
                 
                 <div style="margin-top:10px; padding:8px; background:#fff; border-radius:4px;">
                     <strong>Plantes installées :</strong>
-                    <p>${c.plantes.length === 0 ? '<em>Aucune plante</em>' : c.plantes.map(id => getNomPlante(id)).join(', ')}</p>
+                    <p>${c.plantes.length === 0 ? '<em>Aucune plante</em>' : c.plantes.map(p => getNomPlante(p.idPlante)).join(', ')}</p>
                     ${analyserCarré(c)}
                 </div>
 
@@ -249,6 +192,17 @@ function renderCarres() {
     });
 }
 
+function ajouterPlanteAuCarre(carreId, planteId) {
+    if (!planteId) return;
+    const carre = carres.find(c => c.id === carreId);
+    if (carre) {
+        carre.ajouterPlante(planteId);
+        sauvegarderDonnees();
+        renderCarres();
+        renderCalendrier();
+    }
+}
+
 function getNomPlante(id) {
     const p = plantes.find(item => item.id === id);
     return p ? p.nom : id;
@@ -257,18 +211,9 @@ function getNomPlante(id) {
 function getOptionsPlantesCompatibles(carre) {
     const expositionsAdmissibles = COMPATIBILITE_EXPOSITION[carre.exposition] || [];
     return plantes
-        .filter(p => expositionsAdmissibles.includes(p.besoinSoleil) && !carre.plantes.includes(p.id))
+        .filter(p => expositionsAdmissibles.includes(p.besoinSoleil) && !carre.plantes.some(item => item.idPlante === p.id))
         .map(p => `<option value="${p.id}">${p.nom} (${p.categorie})</option>`)
         .join("");
-}
-
-function ajouterPlanteAuCarre(carreId, planteId) {
-    if (!planteId) return;
-    const carre = carres.find(c => c.id === carreId);
-    if (carre) {
-        carre.ajouterPlante(planteId);
-        renderCarres();
-    }
 }
 
 function analyserCarré(carre) {
@@ -279,8 +224,8 @@ function analyserCarré(carre) {
 
     for (let i = 0; i < carre.plantes.length; i++) {
         for (let j = i + 1; j < carre.plantes.length; j++) {
-            const p1 = carre.plantes[i];
-            const p2 = carre.plantes[j];
+            const p1 = carre.plantes[i].idPlante;
+            const p2 = carre.plantes[j].idPlante;
 
             if (MATRICE_ASSOCIATIONS[p1]?.amis.includes(p2)) {
                 alertesBonnes.push(`✅ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Bonne association`);
@@ -313,8 +258,108 @@ function renderPlantes() {
             <div class="item-card">
                 <h4>${p.nom}</h4>
                 <p><strong>Catégorie :</strong> ${p.categorie}</p>
-                <p><strong>Exposition :</strong> ${p.besoinSoleil}</p>
+                <p><strong>Période Semis :</strong> ${p.semis || "Spring"}</p>
+                <p><strong>Mise en terre :</strong> ${p.repiquage || "Mai"}</p>
             </div>
         `;
+    });
+}
+
+// =================================================================
+// 4. CALENDRIER ET PREDICTION DE RÉCOLTE
+// =================================================================
+
+function renderCalendrier() {
+    const container = document.getElementById("calendrier-container");
+    container.innerHTML = "";
+
+    let plantesEnTerre = [];
+    carres.forEach(c => {
+        c.plantes.forEach(p => {
+            const infoPlante = plantes.find(item => item.id === p.idPlante);
+            if (infoPlante) {
+                plantesEnTerre.push({
+                    carreId: c.id,
+                    nom: infoPlante.nom,
+                    datePlantation: p.datePlantation,
+                    semis: infoPlante.semis,
+                    repiquage: infoPlante.repiquage,
+                    joursMaturation: infoPlante.joursMaturation || 60
+                });
+            }
+        });
+    });
+
+    if (plantesEnTerre.length === 0) {
+        container.innerHTML = "<p style='color:#666;'>Aucune plante actuellement installée dans le potager.</p>";
+        return;
+    }
+
+    plantesEnTerre.forEach(p => {
+        // Estimation de la date de récolte
+        const dateMiseEnTerre = new Date(p.datePlantation);
+        const dateRecolteEstimee = new Date(dateMiseEnTerre);
+        dateRecolteEstimee.setDate(dateRecolteEstimee.getDate() + p.joursMaturation);
+
+        container.innerHTML += `
+            <div class="item-card">
+                <h4>${p.nom} (Carré #${p.carreId})</h4>
+                <p><strong>Semis conseillé :</strong> ${p.semis}</p>
+                <p><strong>Mise en lasagne :</strong> ${p.datePlantation}</p>
+                <p style="color:green;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolteEstimee.toLocaleDateString('fr-FR')}</p>
+            </div>
+        `;
+    });
+}
+
+// =================================================================
+// 5. INTÉGRATION MÉTÉO (OPEN-METEO)
+// =================================================================
+
+async function chargerMeteoEtAlertes() {
+    const statusDiv = document.getElementById("meteo-status");
+    const container = document.getElementById("meteo-cards");
+
+    statusDiv.innerHTML = "<p>🔄 Géolocalisation et météo en cours...</p>";
+
+    if (!navigator.geolocation) {
+        statusDiv.innerHTML = "<p style='color:red;'>La géolocalisation n'est pas supportée par votre navigateur.</p>";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        try {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const temp = data.current.temperature_2m;
+            const humidite = data.current.relative_humidity_2m;
+            const pluie = data.current.precipitation;
+
+            statusDiv.innerHTML = `<p style='color:green;'>📍 Données météo à jour pour votre zone</p>`;
+
+            container.innerHTML = `
+                <div class="item-card">
+                    <h4>🌡️ Météo Actuelle</h4>
+                    <p><strong>Température :</strong> ${temp} °C</p>
+                    <p><strong>Humidité :</strong> ${humidite} %</p>
+                    <p><strong>Précipitations :</strong> ${pluie} mm</p>
+                </div>
+                <div class="item-card">
+                    <h4>💧 Conseil Arrosage</h4>
+                    ${pluie > 5 ? "🌧️ Pluie suffisante. Pas d'arrosage nécessaire." : "🌱 Vérifier la lasagne sous le paillage."}
+                </div>
+                <div class="item-card">
+                    <h4>🛡️ Santé & Pathologies</h4>
+                    ${temp >= 17 && temp <= 25 && humidite >= 80 ? "🚨 <strong>Alerte Mildiou !</strong> Pulvérisez de la prêle." : "✅ Aucun risque majeur détecté."}
+                </div>
+            `;
+        } catch (error) {
+            statusDiv.innerHTML = "<p style='color:red;'>Erreur lors de la récupération des données météo.</p>";
+        }
     });
 }
