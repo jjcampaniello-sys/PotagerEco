@@ -1,5 +1,5 @@
 // =================================================================
-// 1. LOGIQUE MÉTIER (Classes & Données)
+// 1. LOGIQUE MÉTIER & CATALOGUE ÉLARGI
 // =================================================================
 
 class CarrePotager {
@@ -26,33 +26,84 @@ const CATEGORIES = {
     LEGUME_RACINE: "Légumes-Racines",
     LEGUMINEUSE: "Légumineuses",
     AROMATIQUE: "Plantes Aromatiques",
-    FLEUR_AMIE: "Fleurs Bénéfiques"
+    FLEUR_AMIE: "Fleurs Bénéfiques & Pollinisatrices"
 };
 
+// Catalogue initial étoffé
 const catalogueInitial = [
+    // Légumes-Fruits
+    { id: "aubergine", nom: "Aubergine", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
+    { id: "concombre", nom: "Concombre", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
+    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
+    { id: "melon", nom: "Melon", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
+    { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
+    { id: "potiron", nom: "Potiron / Potimarron", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
     { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
-    { id: "courgette", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
+
+    // Légumes-Feuilles
+    { id: "artichaut", nom: "Artichaut", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD" },
+    { id: "blette", nom: "Blette / Bette", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+    { id: "chou_fleur", nom: "Chou-fleur", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+    { id: "chou_pomme", nom: "Chou pommé", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+    { id: "epinard", nom: "Épinard", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
     { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+    { id: "mache", nom: "Mâche", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+    { id: "poireau", nom: "Poireau", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+    { id: "roquette", nom: "Roquette", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
+
+    // Légumes-Racines
+    { id: "ail", nom: "Ail", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
+    { id: "betterave", nom: "Betterave", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
     { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
-    { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "celeri_rave", nom: "Céleri-rave", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE" },
+    { id: "echalote", nom: "Échalote", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
+    { id: "navet", nom: "Navet", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE" },
+    { id: "oignon", nom: "Oignon", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
+    { id: "panais", nom: "Panais", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
+    { id: "patate_douce", nom: "Patate douce", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
+    { id: "pomme_de_terre", nom: "Pomme de terre", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
+    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE" },
+
+    // Légumineuses
+    { id: "fève", nom: "Fève", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "garrance", nom: "Gesse / Pois carré", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "haricot_a_rames", nom: "Haricot à rames", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "haricot_nain", nom: "Haricot nain", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "lentille", nom: "Lentille", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "pois_chiche", nom: "Pois chiche", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "petit_pois", nom: "Pois gourmand / Petit pois", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE" },
+
+    // Aromatiques
+    { id: "aneth", nom: "Aneth", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD" },
     { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD" },
+    { id: "ciboulette", nom: "Ciboulette", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE" },
+    { id: "coriandre", nom: "Coriandre", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE" },
+    { id: "menthe", nom: "Menthe", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE" },
+    { id: "persil", nom: "Persil", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE" },
+    { id: "romarin", nom: "Romarin", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD" },
+    { id: "thym", nom: "Thym", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD" },
+
+    // Fleurs Amies
+    { id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
+    { id: "calendula", nom: "Souci (Calendula)", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
+    { id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
+    { id: "lavande", nom: "Lavande", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
     { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
-    { id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" }
+    { id: "phacelie", nom: "Phacélie", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" }
 ];
 
-// État de l'application
 const carres = [];
 const plantes = [...catalogueInitial];
 
 // =================================================================
-// 2. INTERFACE UTILISATEUR & DOM
+// 2. INTERFACE UTILISATEUR & ÉVÉNEMENTS
 // =================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
     initSelects();
     renderPlantes();
 
-    // Événement : Ajouter un carré
+    // Gestion de l'ajout d'un carré
     document.getElementById("form-carre").addEventListener("submit", (e) => {
         e.preventDefault();
         const L = document.getElementById("longueur").value;
@@ -67,30 +118,38 @@ document.addEventListener("DOMContentLoaded", () => {
         e.target.reset();
     });
 
-    // Événement : Ajouter une plante personnalisée
+    // Gestion de l'ajout automatique d'une nouvelle plante
     document.getElementById("form-plante").addEventListener("submit", (e) => {
         e.preventDefault();
-        const nom = document.getElementById("p-nom").value;
+        const nom = document.getElementById("p-nom").value.trim();
         const categorie = document.getElementById("p-categorie").value;
         const besoinSoleil = document.getElementById("p-soleil").value;
 
-        const id = nom.toLowerCase().replace(/\s+/g, '_');
+        if (!nom) return;
+
+        const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
         
+        // Ajout automatique au catalogue
         plantes.push({ id, nom, categorie, besoinSoleil });
+
+        // Mise à jour de l'affichage (s'assure que le filtre pointe sur la catégorie de la nouvelle plante)
+        document.getElementById("filter-categorie").value = categorie;
         renderPlantes();
+        
         e.target.reset();
     });
 
-    // Événement : Filtrer le catalogue
+    // Filtrage dynamique lors du changement dans le menu déroulant
     document.getElementById("filter-categorie").addEventListener("change", renderPlantes);
 });
 
-// Initialiser les menus déroulants dynamiques
+// Initialise les menus déroulants
 function initSelects() {
     const selectCat = document.getElementById("p-categorie");
     const selectFilter = document.getElementById("filter-categorie");
 
-    selectFilter.innerHTML = `<option value="TOUS">Toutes les catégories</option>`;
+    selectCat.innerHTML = "";
+    selectFilter.innerHTML = `<option value="TOUS">-- Toutes les catégories --</option>`;
 
     Object.values(CATEGORIES).forEach(cat => {
         selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
@@ -98,14 +157,13 @@ function initSelects() {
     });
 }
 
-// Rendu visuel des carrés ajoutés
+// Rendu des carrés potagers
 function renderCarres() {
     const container = document.getElementById("liste-carres");
     container.innerHTML = "";
 
     carres.forEach(c => {
         const volume = c.getVolumeLitres();
-        // Calcul du volume pour les lasagnes (30% brun, 30% vert, 40% compost/terre)
         const brun = (volume * 0.3).toFixed(0);
         const vert = (volume * 0.3).toFixed(0);
 
@@ -121,22 +179,32 @@ function renderCarres() {
     });
 }
 
-// Rendu visuel du catalogue de plantes
+// Rendu des plantes : Tri alphabétique & Filtrage par catégorie
 function renderPlantes() {
     const container = document.getElementById("catalogue-plantes");
     const filter = document.getElementById("filter-categorie").value;
     container.innerHTML = "";
 
-    const plantesFiltrees = filter === "TOUS" || !filter
-        ? plantes 
+    // 1. Filtrer les plantes
+    let plantesFiltrees = (filter === "TOUS" || !filter)
+        ? [...plantes]
         : plantes.filter(p => p.categorie === filter);
+
+    // 2. Trier la liste filtrée par ORDRE ALPHABÉTIQUE (prend en compte les accents)
+    plantesFiltrees.sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
+
+    // 3. Afficher les résultats
+    if (plantesFiltrees.length === 0) {
+        container.innerHTML = `<p>Aucune plante dans cette catégorie pour le moment.</p>`;
+        return;
+    }
 
     plantesFiltrees.forEach(p => {
         container.innerHTML += `
             <div class="item-card">
                 <h4>${p.nom}</h4>
                 <p><strong>Catégorie :</strong> ${p.categorie}</p>
-                <p><strong>Exposition :</strong> ${p.besoinSoleil}</p>
+                <p><strong>Exposition recommandée :</strong> ${p.besoinSoleil}</p>
             </div>
         `;
     });
