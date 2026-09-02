@@ -9,7 +9,7 @@ class CarrePotager {
         this.largeur = Number(largeur);
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
-        // Grille de 9 cases (3x3). Chaque case contient null ou un objet { idPlante, datePlantation }
+        // Grille de 9 cases (3x3). Chaque case contient null ou { idPlante, datePlantation }
         this.grille = Array(9).fill(null);
     }
 
@@ -55,25 +55,79 @@ const COMPATIBILITE_EXPOSITION = {
     "NORD": ["OMBRE", "MI_OMBRE"]
 };
 
-// Catalogue avec distances minimales recommandées
+const REGLES_DISTANCES = {
+    PROTECTION_SANITAIRE: { icone: "🛡️", libelle: "Protection contre parasites/nuisibles" },
+    POLLINISATION: { icone: "🐝", libelle: "Attraction des pollinisateurs" },
+    COMPAGNONNAGE_DIRECT: { icone: "🤝", libelle: "Synergie racinaire / Ombrage" },
+    INCOMPATIBILITE: { icone: "⚠️", libelle: "Incompatibilité / Éloignement recommandé" }
+};
+
+// Catalogue de base des plantes avec fleurs compagnes et descriptions
 const catalogueInitial = [
-    { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 75, distanceMin: 45 },
-    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai - Juin", joursMaturation: 60, distanceMin: 60 },
-    { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Février - Mars", repiquage: "Mai", joursMaturation: 85, distanceMin: 40 },
-    { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Avril - Octobre", joursMaturation: 45, distanceMin: 25 },
-    { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Mars - Juillet", repiquage: "Semis direct", joursMaturation: 80, distanceMin: 10 },
-    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Semis direct", joursMaturation: 25, distanceMin: 5 },
-    { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Mai - Juillet", repiquage: "Semis direct", joursMaturation: 60, distanceMin: 20 },
-    { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai", joursMaturation: 30, distanceMin: 20 },
-    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 50, distanceMin: 15 }
+    { 
+        id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
+        semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 75, distanceMin: 45,
+        fleursProtections: ["oeillet_inde", "capucine"],
+        descriptionRole: "Propritaires d'anti-nématodes et répulsifs pucerons au pied."
+    },
+    { 
+        id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
+        semis: "Avril - Mai", repiquage: "Mai - Juin", joursMaturation: 60, distanceMin: 60,
+        fleursProtections: ["bourrache", "souci"],
+        descriptionRole: "Fort besoin en abeilles pour polliniser les fleurs femelles."
+    },
+    { 
+        id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", 
+        semis: "Mars - Septembre", repiquage: "Avril - Octobre", joursMaturation: 45, distanceMin: 25,
+        fleursProtections: [],
+        descriptionRole: "Apprécie l'ombre portée des grands légumes en été."
+    },
+    { 
+        id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
+        semis: "Mars - Juillet", repiquage: "Semis direct", joursMaturation: 80, distanceMin: 10,
+        fleursProtections: ["oeillet_inde"],
+        descriptionRole: "Sensible à la mouche de la carotte."
+    },
+    { 
+        id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", 
+        semis: "Avril - Mai", repiquage: "Mai", joursMaturation: 30, distanceMin: 20,
+        fleursProtections: ["oeillet_inde"],
+        descriptionRole: "Aromatique protectrice contre le mildiou et le moucheron."
+    },
+    { 
+        id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
+        semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 50, distanceMin: 15,
+        fleursProtections: [],
+        descriptionRole: "🛡️ Fleur protectrice : Répulse nématodes du sol et pucerons."
+    },
+    { 
+        id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
+        semis: "Mars - Mai", repiquage: "Semis direct", joursMaturation: 45, distanceMin: 30,
+        fleursProtections: [],
+        descriptionRole: "🐝 Fleur pollinisatrice : Attire massivement les abeilles."
+    },
+    { 
+        id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
+        semis: "Avril - Mai", repiquage: "Mai", joursMaturation: 40, distanceMin: 20,
+        fleursProtections: [],
+        descriptionRole: "🌸 Fleur piège : Concentre les pucerons pour épargner le potager."
+    }
 ];
 
+// Matrice d'associations avec règles de distance préconisées
 const MATRICE_ASSOCIATIONS = {
-    tomate: { amis: ["basilic", "oeillet_inde", "carotte", "laitue"], ennemis: ["courgettes"] },
-    carotte: { amis: ["radis", "laitue", "tomate"], ennemis: [] },
-    haricot: { amis: ["courgettes", "radis", "basilic"], ennemis: [] },
-    basilic: { amis: ["tomate", "poivron", "oeillet_inde"], ennemis: [] },
-    oeillet_inde: { amis: ["tomate", "courgettes", "poivron", "basilic"], ennemis: [] }
+    tomate: {
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "L'Œillet d'Inde libère des molécules anti-nématodes près des racines de la tomate." },
+        basilic: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "Le Basilic profite de l'ombrage léger de la Tomate et stimule son goût." },
+        courgettes: { type: "INCOMPATIBILITE", distance: "40-60 cm (Éloigner)", conseil: "Feuillages trop encombrants : risque élevé de compétition." }
+    },
+    courgettes: {
+        bourrache: { type: "POLLINISATION", distance: "25-30 cm", conseil: "La Bourrache attire les abeilles indispensables à la nouaison des courgettes." },
+        capucine: { type: "PROTECTION_SANITAIRE", distance: "20-30 cm", conseil: "La Capucine attire les pucerons à elle pour préserver les feuilles de courgette." }
+    },
+    carotte: {
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "L'odeur de la fleur masque la carotte face à la mouche de la carotte." }
+    }
 };
 
 let carres = [];
@@ -85,13 +139,13 @@ window.zoneClimatiqueActuelle = { nom: "Standard", decalageJours: 0 };
 // =================================================================
 
 function sauvegarderDonnees() {
-    localStorage.setItem("potager_carres_v5", JSON.stringify(carres));
-    localStorage.setItem("potager_plantes_v5", JSON.stringify(plantes));
+    localStorage.setItem("potager_carres_v7", JSON.stringify(carres));
+    localStorage.setItem("potager_plantes_v7", JSON.stringify(plantes));
 }
 
 function chargerDonneesStockees() {
-    const carresStockes = localStorage.getItem("potager_carres_v5");
-    const plantesStockees = localStorage.getItem("potager_plantes_v5");
+    const carresStockes = localStorage.getItem("potager_carres_v7");
+    const plantesStockees = localStorage.getItem("potager_plantes_v7");
 
     if (plantesStockees) plantes = JSON.parse(plantesStockees);
 
@@ -140,7 +194,8 @@ document.addEventListener("DOMContentLoaded", () => {
         plantes.push({
             id, nom, categorie, besoinSoleil,
             semis: "Printemps", repiquage: "Pleine terre",
-            joursMaturation: 60, distanceMin: 25
+            joursMaturation: 60, distanceMin: 25,
+            fleursProtections: [], descriptionRole: "Plante personnalisée."
         });
 
         sauvegarderDonnees();
@@ -166,7 +221,25 @@ function initSelects() {
 }
 
 // =================================================================
-// 3. AFFICHAGE ET INTERACTION AVEC LES CARRÉS (GRILLE 3x3)
+// 3. FONCTIONS MATHÉMATIQUES & GEOMÉTRIE DE LA GRILLE
+// =================================================================
+
+// Calcule la distance physique réelle (en cm) entre 2 cases d'une grille 3x3 de 90x90cm
+function calculerDistanceEntreCases(indexCase1, indexCase2, tailleCaseCm = 30) {
+    const x1 = indexCase1 % 3;
+    const y1 = Math.floor(indexCase1 / 3);
+    const x2 = indexCase2 % 3;
+    const y2 = Math.floor(indexCase2 / 3);
+
+    const deltaX = Math.abs(x1 - x2);
+    const deltaY = Math.abs(y1 - y2);
+
+    const distanceEuclidienne = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    return Math.round(distanceEuclidienne * tailleCaseCm);
+}
+
+// =================================================================
+// 4. AFFICHAGE ET GESTION DES CARRÉS POTAGERS
 // =================================================================
 
 function renderCarres() {
@@ -175,30 +248,24 @@ function renderCarres() {
 
     carres.forEach(c => {
         const volume = c.getVolumeLitres();
-        const brun = (volume * 0.3).toFixed(0);
-        const vert = (volume * 0.3).toFixed(0);
-
         let htmlGrille = `<div class="grille-potager">`;
+        
         for (let index = 0; index < 9; index++) {
             const contenuCase = c.grille[index];
             if (contenuCase) {
                 const nomP = getNomPlante(contenuCase.idPlante);
                 htmlGrille += `
-                    <div class="case-grille plante-occupee" onclick="libererCase(${c.id}, ${index})">
+                    <div class="case-grille plante-occupee">
                         🌿 <strong>${nomP}</strong>
                         <small style="font-size:9px;">${contenuCase.datePlantation}</small>
-                        <button class="btn-suppr-case" title="Supprimer">❌</button>
+                        <button class="btn-suppr-case" onclick="libererCase(${c.id}, ${index})" title="Retirer">❌</button>
                     </div>
                 `;
             } else {
                 htmlGrille += `
-                    <div class="case-grille" 
-                         ondragover="allowDrop(event)" 
-                         ondragleave="removeDragOver(event)"
-                         ondrop="dropPlante(event, ${c.id}, ${index})"
-                         onclick="attribuerCaseParClic(${c.id}, ${index})">
-                        <span style="color:#aaa;">Emplacement ${index + 1}</span>
-                        <small style="color:#888;">+ Ajouter</small>
+                    <div class="case-grille">
+                        <span style="color:#aaa;">Emp. ${index + 1}</span>
+                        <small style="color:#888;">Libre</small>
                     </div>
                 `;
             }
@@ -206,17 +273,11 @@ function renderCarres() {
         htmlGrille += `</div>`;
 
         container.innerHTML += `
-            <div class="item-card">
+            <div class="item-card" id="carre-card-${c.id}">
                 <h4>Carré #${c.id} (${c.exposition})</h4>
-                <p><strong>Taille :</strong> ${c.longueur}x${c.largeur}x${c.hauteur} cm</p>
-                <p><strong>Lasagne :</strong> ${volume.toFixed(0)}L (Brun: ~${brun}L / Vert: ~${vert}L)</p>
-                
-                <strong>Grille du carré (Placer vos légumes) :</strong>
+                <p><strong>Dimensions :</strong> ${c.longueur}x${c.largeur}x${c.hauteur} cm (${volume.toFixed(0)}L)</p>
+                <strong>Grille des emplacements :</strong>
                 ${htmlGrille}
-
-                <div style="margin-top:10px; padding:8px; background:#fff; border-radius:4px;">
-                    ${analyserCarré(c)}
-                </div>
             </div>
         `;
     });
@@ -232,53 +293,8 @@ function libererCase(carreId, indexCase) {
     }
 }
 
-function attribuerCaseParClic(carreId, indexCase) {
-    const carre = carres.find(c => c.id === carreId);
-    if (!carre) return;
-
-    const expositionsAdmissibles = COMPATIBILITE_EXPOSITION[carre.exposition] || [];
-    const disponibles = plantes.filter(p => expositionsAdmissibles.includes(p.besoinSoleil));
-
-    let optionsStr = disponibles.map((p, idx) => `${idx + 1}. ${p.nom} (Espacement rec.: ${p.distanceMin || 20}cm)`).join("\n");
-    let choix = prompt(`Sélectionnez une plante pour la case ${indexCase + 1} du Carré #${carre.id} :\n\n${optionsStr}\n\nEntrez le numéro du choix :`);
-
-    if (choix) {
-        const indexPlante = Number(choix.trim()) - 1;
-        if (disponibles[indexPlante]) {
-            carre.placerPlanteCase(indexCase, disponibles[indexPlante].id);
-            sauvegarderDonnees();
-            renderCarres();
-            renderCalendrier();
-        }
-    }
-}
-
-// Support du Drag-and-Drop
-function allowDrop(ev) {
-    ev.preventDefault();
-    ev.currentTarget.classList.add('drag-over');
-}
-
-function removeDragOver(ev) {
-    ev.currentTarget.classList.remove('drag-over');
-}
-
-function dropPlante(ev, carreId, indexCase) {
-    ev.preventDefault();
-    ev.currentTarget.classList.remove('drag-over');
-    const planteId = ev.dataTransfer.getData("text/plain");
-
-    const carre = carres.find(c => c.id === carreId);
-    if (carre && planteId) {
-        carre.placerPlanteCase(indexCase, planteId);
-        sauvegarderDonnees();
-        renderCarres();
-        renderCalendrier();
-    }
-}
-
 // =================================================================
-// 4. CATALOGUE ET CLIC SUR PLANTES
+// 5. CATALOGUE ET ASSISTANT DE PLANTATION INTERACTIF
 // =================================================================
 
 function renderPlantes() {
@@ -294,51 +310,143 @@ function renderPlantes() {
 
     plantesFiltrees.forEach(p => {
         container.innerHTML += `
-            <div class="item-card item-cliquable" 
-                 draggable="true" 
-                 ondragstart="dragStart(event, '${p.id}')"
-                 onclick="selectionnerPlantePourPlantation('${p.id}')" 
-                 style="cursor: grab; border: 2px solid #e0e0e0;">
+            <div class="item-card" style="border: 2px solid #e0e0e0;">
                 <h4>🌱 ${p.nom}</h4>
                 <p><strong>Catégorie :</strong> ${p.categorie}</p>
-                <p><strong>Exposition :</strong> ${p.besoinSoleil}</p>
                 <p><strong>Espacement :</strong> ${p.distanceMin || 25} cm</p>
-                <button class="btn-secondary" style="margin-top: 8px; width: 100%;">➕ Choisir le carré</button>
+                <button class="btn-primary" onclick="ouvrirAssistantPlantation('${p.id}')" style="margin-top: 8px; width: 100%;">
+                    ⚡ Choisir et Placer
+                </button>
             </div>
         `;
     });
 }
 
-function dragStart(ev, planteId) {
-    ev.dataTransfer.setData("text/plain", planteId);
-}
+function ouvrirAssistantPlantation(planteId) {
+    const plante = plantes.find(p => p.id === planteId);
+    if (!plante) return;
 
-function selectionnerPlantePourPlantation(planteId) {
     if (carres.length === 0) {
-        alert("⚠️ Veuillez créer un carré potager dans la Section 1 !");
+        alert("⚠️ Veuillez créer un carré potager dans la Section 1 avant de placer une plante.");
         return;
     }
 
-    const plante = plantes.find(p => p.id === planteId);
-    let options = carres.map(c => `Carré #${c.id} (${c.exposition})`).join("\n");
-    let choixCarre = prompt(`Dans quel carré placer la "${plante.nom}" ?\n\n${options}\n\nEntrez le N° du carré :`);
+    let optionsCarres = "";
+    carres.forEach(c => {
+        const casesLibres = c.grille.map((val, idx) => val === null ? idx : null).filter(v => v !== null);
+        
+        if (casesLibres.length > 0) {
+            optionsCarres += `<optgroup label="Carré #${c.id} (${c.exposition} - ${casesLibres.length} libre(s))">`;
+            casesLibres.forEach(idx => {
+                optionsCarres += `<option value="${c.id}-${idx}">Carré #${c.id} ➔ Emplacement ${idx + 1}</option>`;
+            });
+            optionsCarres += `</optgroup>`;
+        }
+    });
 
-    if (choixCarre) {
-        const numCarre = Number(choixCarre.trim());
-        const carreCible = carres.find(c => c.id === numCarre);
+    if (!optionsCarres) {
+        alert("⚠️ Vos carrés potagers sont tous complets (9/9 emplacements occupés).");
+        return;
+    }
 
-        if (carreCible) {
-            const caseLibre = carreCible.grille.findIndex(c => c === null);
-            if (caseLibre !== -1) {
-                carreCible.placerPlanteCase(caseLibre, planteId);
-                sauvegarderDonnees();
-                renderCarres();
-                renderCalendrier();
-                alert(`✅ "${plante.nom}" placée dans le Carré #${carreCible.id} (Emplacement ${caseLibre + 1}) !\n📏 Espacement recommandé : ${plante.distanceMin || 25} cm.`);
+    // Modal / Fenêtre surgissante
+    const overlay = document.createElement("div");
+    overlay.id = "modal-assistant";
+    overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1000; padding:15px;";
+
+    overlay.innerHTML = `
+        <div style="background: white; border-radius: 8px; padding: 20px; max-width: 520px; width: 100%; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+            <h3 style="color:#2e7d32; margin-top:0;">🌱 Assistant & Guidage : ${plante.nom}</h3>
+            
+            <label style="font-weight:bold; display:block; margin-bottom:5px;">Sélectionnez l'emplacement cible :</label>
+            <select id="select-emplacement-guide" style="width:100%; padding:8px; margin-bottom:12px; border-radius:4px; border:1px solid #ccc;" onchange="mettreAJourConseilDistance('${plante.id}')">
+                ${optionsCarres}
+            </select>
+
+            <!-- Zone de guidage dynamique des distances et associations -->
+            <div id="zone-conseil-distance" style="padding:12px; background:#f9f9f9; border-radius:6px; border:1px solid #ddd; margin-bottom:15px; font-size:13px;">
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="fermerAssistant()" style="padding:8px 15px; background:#e0e0e0; border:none; border-radius:4px; cursor:pointer;">Annuler</button>
+                <button onclick="validerPlantationDepuisAssistant('${plante.id}')" style="padding:8px 15px; background:#2e7d32; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">Confirmer la plantation</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    mettreAJourConseilDistance(plante.id);
+}
+
+function mettreAJourConseilDistance(planteId) {
+    const select = document.getElementById("select-emplacement-guide");
+    const containerConseil = document.getElementById("zone-conseil-distance");
+    if (!select || !containerConseil) return;
+
+    const [carreId, indexCaseCible] = select.value.split("-").map(Number);
+    const carre = carres.find(c => c.id === carreId);
+    if (!carre) return;
+
+    let retoursDistance = [];
+
+    carre.grille.forEach((contenuCase, indexVoisin) => {
+        if (contenuCase && indexVoisin !== indexCaseCible) {
+            const idVoisin = contenuCase.idPlante;
+            const nomVoisin = getNomPlante(idVoisin);
+            
+            // Calcul de la distance réelle sur la grille
+            const distReelle = calculerDistanceEntreCases(indexCaseCible, indexVoisin);
+
+            // Recherche de la règle d'association dans la matrice
+            const regleDirecte = MATRICE_ASSOCIATIONS[planteId]?.[idVoisin];
+            const regleInverse = MATRICE_ASSOCIATIONS[idVoisin]?.[planteId];
+            const regle = regleDirecte || regleInverse;
+
+            if (regle) {
+                const regleInfo = REGLES_DISTANCES[regle.type] || { icone: "💡" };
+                retoursDistance.push(`
+                    <div style="margin-bottom:8px;">
+                        ${regleInfo.icone} <strong>Voisin (${nomVoisin}) à ${distReelle} cm :</strong><br>
+                        <small>• Distance préconisée : <strong>${regle.distance}</strong></small><br>
+                        <small style="color:#2e7d32;">• ${regle.conseil}</small>
+                    </div>
+                `);
             } else {
-                alert("❌ Ce carré est complet (9/9 emplacements occupés).");
+                retoursDistance.push(`
+                    <div style="margin-bottom:5px;">
+                        📍 <strong>Voisin (${nomVoisin}) à ${distReelle} cm :</strong>
+                        <small style="color:#555;">Association neutre. Distance observée correcte.</small>
+                    </div>
+                `);
             }
         }
+    });
+
+    if (retoursDistance.length === 0) {
+        containerConseil.innerHTML = "✨ <strong>Emplacement Isolé :</strong> Aucun voisin direct dans ce carré. Emplacement idéal pour débuter la plantation.";
+    } else {
+        containerConseil.innerHTML = retoursDistance.join("<hr style='border:0; border-top:1px dashed #ccc; margin:6px 0;'>");
+    }
+}
+
+function fermerAssistant() {
+    const modal = document.getElementById("modal-assistant");
+    if (modal) modal.remove();
+}
+
+function validerPlantationDepuisAssistant(planteId) {
+    const select = document.getElementById("select-emplacement-guide");
+    if (!select) return;
+
+    const [carreId, indexCase] = select.value.split("-").map(Number);
+    const carre = carres.find(c => c.id === carreId);
+
+    if (carre) {
+        carre.placerPlanteCase(indexCase, planteId);
+        sauvegarderDonnees();
+        renderCarres();
+        renderCalendrier();
+        fermerAssistant();
     }
 }
 
@@ -347,35 +455,8 @@ function getNomPlante(id) {
     return p ? p.nom : id;
 }
 
-function analyserCarré(carre) {
-    const plantesPresentes = carre.getPlantesUnique();
-    if (plantesPresentes.length < 2) return "<p style='color:#666;'><small>Ajoutez au moins 2 plantes dans la grille pour analyser le compagnonnage.</small></p>";
-
-    let alertesBonnes = [];
-    let alertesMauvaises = [];
-
-    for (let i = 0; i < plantesPresentes.length; i++) {
-        for (let j = i + 1; j < plantesPresentes.length; j++) {
-            const p1 = plantesPresentes[i];
-            const p2 = plantesPresentes[j];
-
-            if (MATRICE_ASSOCIATIONS[p1]?.amis.includes(p2)) {
-                alertesBonnes.push(`✅ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Très bonne association !`);
-            }
-            if (MATRICE_ASSOCIATIONS[p1]?.ennemis.includes(p2)) {
-                alertesMauvaises.push(`⚠️ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Mauvais voisins !`);
-            }
-        }
-    }
-
-    let html = "";
-    if (alertesBonnes.length > 0) html += `<div style="color:green; font-size:12px;">${alertesBonnes.join('<br>')}</div>`;
-    if (alertesMauvaises.length > 0) html += `<div style="color:red; font-size:12px;">${alertesMauvaises.join('<br>')}</div>`;
-    return html || `<div style="color:#555; font-size:12px;">Associations neutres.</div>`;
-}
-
 // =================================================================
-// 5. CALENDRIER DE RÉCOLTE & CLIMAT DYNAMIQUE
+// 6. CALENDRIER DE RÉCOLTE ET CLIMAT DYNAMIQUE
 // =================================================================
 
 function obtenirZoneClimatique(latitude) {
@@ -413,7 +494,7 @@ function renderCalendrier() {
     });
 
     if (plantesEnTerre.length === 0) {
-        container.innerHTML = "<p style='color:#666;'>Aucune plante actuellement installée dans la grille du potager.</p>";
+        container.innerHTML = "<p style='color:#666;'>Aucune plante actuellement installée dans le potager.</p>";
         return;
     }
 
@@ -430,7 +511,6 @@ function renderCalendrier() {
                 <p><strong>Climat local :</strong> ${window.zoneClimatiqueActuelle.nom}</p>
                 <p><strong>Semis conseillé :</strong> ${p.semis}</p>
                 <p><strong>Plantation :</strong> ${p.datePlantation}</p>
-                <p><strong>Espacement :</strong> ${p.distanceMin} cm</p>
                 <p style="color:green;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolteEstimee.toLocaleDateString('fr-FR')}</p>
             </div>
         `;
@@ -438,7 +518,7 @@ function renderCalendrier() {
 }
 
 // =================================================================
-// 6. INTÉGRATION MÉTÉO (OPEN-METEO)
+// 7. INTÉGRATION MÉTÉO EN TEMPS RÉEL (OPEN-METEO)
 // =================================================================
 
 async function chargerMeteoEtAlertes() {
@@ -479,11 +559,11 @@ async function chargerMeteoEtAlertes() {
                 </div>
                 <div class="item-card">
                     <h4>💧 Conseil Arrosage</h4>
-                    ${pluie > 5 ? "🌧️ Pluie suffisante. Inutile d'arroser la lasagne." : "🌱 Vérifiez la fraîcheur sous la lasagne."}
+                    ${pluie > 5 ? "🌧️ Pluie suffisante." : "🌱 Arrosage recommandé si le sol est sec."}
                 </div>
                 <div class="item-card">
                     <h4>🛡️ Santé Plante</h4>
-                    ${temp >= 17 && temp <= 25 && humidite >= 80 ? "🚨 <strong>Alerte Mildiou !</strong> Traitez préventivement avec de la prêle." : "✅ Aucun risque sanitaire fort détecté."}
+                    ${temp >= 17 && temp <= 25 && humidite >= 80 ? "🚨 <strong>Alerte Mildiou !</strong> Traitez préventivement à la prêle." : "✅ Aucun risque sanitaire fort détecté."}
                 </div>
             `;
         } catch (error) {
