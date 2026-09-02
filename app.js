@@ -1,5 +1,5 @@
 // =================================================================
-// 1. LOGIQUE MÉTIER & CATALOGUE ÉLARGI
+// 1. CONFIGURATION & CATALOGUE COMPLET
 // =================================================================
 
 class CarrePotager {
@@ -12,11 +12,11 @@ class CarrePotager {
     }
 
     getSurface() {
-        return (this.longueur * this.largeur) / 10000; // m²
+        return (this.longueur * this.largeur) / 10000; // Surface en m²
     }
 
     getVolumeLitres() {
-        return (this.longueur * this.largeur * this.hauteur) / 1000; // Litres
+        return (this.longueur * this.largeur * this.hauteur) / 1000; // Volume en Litres
     }
 }
 
@@ -29,7 +29,17 @@ const CATEGORIES = {
     FLEUR_AMIE: "Fleurs Bénéfiques & Pollinisatrices"
 };
 
-// Catalogue initial étoffé
+// Tolérance d'exposition : associe l'orientation du carré aux besoins solaires tolérés
+const COMPATIBILITE_EXPOSITION = {
+    "SUD": ["SUD", "MI_OMBRE"],
+    "SUD_OUEST": ["SUD", "MI_OMBRE"],
+    "SUD_EST": ["SUD", "MI_OMBRE"], // Le Sud-Est accepte les légumes-fruits (7-8h de soleil estival)
+    "OUEST": ["SUD", "MI_OMBRE"],
+    "EST": ["MI_OMBRE", "OMBRE"],
+    "NORD": ["OMBRE", "MI_OMBRE"]
+};
+
+// Catalogue initial de plantes
 const catalogueInitial = [
     // Légumes-Fruits
     { id: "aubergine", nom: "Aubergine", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
@@ -65,8 +75,7 @@ const catalogueInitial = [
     { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE" },
 
     // Légumineuses
-    { id: "fève", nom: "Fève", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
-    { id: "garrance", nom: "Gesse / Pois carré", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
+    { id: "feve", nom: "Fève", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
     { id: "haricot_a_rames", nom: "Haricot à rames", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
     { id: "haricot_nain", nom: "Haricot nain", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
     { id: "lentille", nom: "Lentille", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
@@ -87,125 +96,4 @@ const catalogueInitial = [
     { id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
     { id: "calendula", nom: "Souci (Calendula)", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
     { id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
-    { id: "lavande", nom: "Lavande", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
-    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
-    { id: "phacelie", nom: "Phacélie", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" }
-];
-
-const carres = [];
-const plantes = [...catalogueInitial];
-
-// =================================================================
-// 2. INTERFACE UTILISATEUR & ÉVÉNEMENTS
-// =================================================================
-
-document.addEventListener("DOMContentLoaded", () => {
-    initSelects();
-    renderPlantes();
-
-    // Gestion de l'ajout d'un carré
-    document.getElementById("form-carre").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const L = document.getElementById("longueur").value;
-        const l = document.getElementById("largeur").value;
-        const h = document.getElementById("hauteur").value;
-        const expo = document.getElementById("exposition").value;
-
-        const nouveauCarre = new CarrePotager(carres.length + 1, L, l, h, expo);
-        carres.push(nouveauCarre);
-        
-        renderCarres();
-        e.target.reset();
-    });
-
-    // Gestion de l'ajout automatique d'une nouvelle plante
-    document.getElementById("form-plante").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const nom = document.getElementById("p-nom").value.trim();
-        const categorie = document.getElementById("p-categorie").value;
-        const besoinSoleil = document.getElementById("p-soleil").value;
-
-        if (!nom) return;
-
-        const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
-        
-        // Ajout automatique au catalogue
-        plantes.push({ id, nom, categorie, besoinSoleil });
-
-        // Mise à jour de l'affichage (s'assure que le filtre pointe sur la catégorie de la nouvelle plante)
-        document.getElementById("filter-categorie").value = categorie;
-        renderPlantes();
-        
-        e.target.reset();
-    });
-
-    // Filtrage dynamique lors du changement dans le menu déroulant
-    document.getElementById("filter-categorie").addEventListener("change", renderPlantes);
-});
-
-// Initialise les menus déroulants
-function initSelects() {
-    const selectCat = document.getElementById("p-categorie");
-    const selectFilter = document.getElementById("filter-categorie");
-
-    selectCat.innerHTML = "";
-    selectFilter.innerHTML = `<option value="TOUS">-- Toutes les catégories --</option>`;
-
-    Object.values(CATEGORIES).forEach(cat => {
-        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
-        selectFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
-}
-
-// Rendu des carrés potagers
-function renderCarres() {
-    const container = document.getElementById("liste-carres");
-    container.innerHTML = "";
-
-    carres.forEach(c => {
-        const volume = c.getVolumeLitres();
-        const brun = (volume * 0.3).toFixed(0);
-        const vert = (volume * 0.3).toFixed(0);
-
-        container.innerHTML += `
-            <div class="item-card">
-                <h4>Carré #${c.id} (${c.exposition})</h4>
-                <p><strong>Taille :</strong> ${c.longueur}x${c.largeur}x${c.hauteur} cm</p>
-                <p><strong>Surface :</strong> ${c.getSurface().toFixed(2)} m²</p>
-                <p><strong>Volume :</strong> ${volume.toFixed(0)} Litres</p>
-                <span class="badge">Lasagne : ~${brun}L Brun / ~${vert}L Vert</span>
-            </div>
-        `;
-    });
-}
-
-// Rendu des plantes : Tri alphabétique & Filtrage par catégorie
-function renderPlantes() {
-    const container = document.getElementById("catalogue-plantes");
-    const filter = document.getElementById("filter-categorie").value;
-    container.innerHTML = "";
-
-    // 1. Filtrer les plantes
-    let plantesFiltrees = (filter === "TOUS" || !filter)
-        ? [...plantes]
-        : plantes.filter(p => p.categorie === filter);
-
-    // 2. Trier la liste filtrée par ORDRE ALPHABÉTIQUE (prend en compte les accents)
-    plantesFiltrees.sort((a, b) => a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' }));
-
-    // 3. Afficher les résultats
-    if (plantesFiltrees.length === 0) {
-        container.innerHTML = `<p>Aucune plante dans cette catégorie pour le moment.</p>`;
-        return;
-    }
-
-    plantesFiltrees.forEach(p => {
-        container.innerHTML += `
-            <div class="item-card">
-                <h4>${p.nom}</h4>
-                <p><strong>Catégorie :</strong> ${p.categorie}</p>
-                <p><strong>Exposition recommandée :</strong> ${p.besoinSoleil}</p>
-            </div>
-        `;
-    });
-}
+    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.
