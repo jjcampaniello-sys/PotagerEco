@@ -95,3 +95,55 @@ button {
 .item-card h4 { margin: 0 0 8px 0; color: var(--primary); }
 .item-card p { margin: 4px 0; font-size: 13px; }
 .badge { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+
+/* Grille 3x3 interactive pour chaque carré potager */
+.grille-potager {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 15px;
+    background: #e8f5e9;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px dashed #81c784;
+}
+
+.case-grille {
+    background: #ffffff;
+    border: 1px solid #a5d6a7;
+    border-radius: 6px;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    text-align: center;
+    padding: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.case-grille:hover {
+    background: #f1f8e9;
+}
+
+.case-grille.drag-over {
+    background: #c8e6c9;
+    border: 2px solid #2e7d32;
+}
+
+.plante-occupee {
+    font-weight: bold;
+    color: #1b5e20;
+}
+
+.btn-suppr-case {
+    background: none;
+    border: none;
+    color: #c62828;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+    margin-top: 2px;
+}
