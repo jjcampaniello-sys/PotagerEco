@@ -43,6 +43,17 @@ const COMPATIBILITE_EXPOSITION = {
     "NORD": ["OMBRE", "MI_OMBRE"]
 };
 
+// Détermine la zone climatique selon la latitude
+function obtenirZoneClimatique(latitude) {
+    if (latitude < 44.0) {
+        return { nom: "Méditerranéen / Sud", decalageJours: -21 }; // 3 semaines plus tôt
+    } else if (latitude >= 44.0 && latitude < 48.5) {
+        return { nom: "Tempéré (ex: Région Parisienne, Ouest)", decalageJours: 0 }; // Référence
+    } else {
+        return { nom: "Nordique / Continental (ex: Pays-Bas, Nord)", decalageJours: 14 }; // 2 semaines plus tard
+    }
+}
+
 // Catalogue enrichi avec données phénologiques (semis, repiquage, jours de croissance)
 const catalogueInitial = [
     { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 75 },
@@ -269,26 +280,28 @@ function renderPlantes() {
 // 4. CALENDRIER ET PREDICTION DE RÉCOLTE
 // =================================================================
 
-function renderCalendrier() {
-    const container = document.getElementById("calendrier-container");
-    container.innerHTML = "";
+// Dans renderCalendrier(), modifiez la boucle d'affichage :
+plantesEnTerre.forEach(p => {
+    // Récupération du décalage (par défaut 0 si non géolocalisé)
+    const decalage = window.zoneClimatiqueActuelle ? window.zoneClimatiqueActuelle.decalageJours : 0;
 
-    let plantesEnTerre = [];
-    carres.forEach(c => {
-        c.plantes.forEach(p => {
-            const infoPlante = plantes.find(item => item.id === p.idPlante);
-            if (infoPlante) {
-                plantesEnTerre.push({
-                    carreId: c.id,
-                    nom: infoPlante.nom,
-                    datePlantation: p.datePlantation,
-                    semis: infoPlante.semis,
-                    repiquage: infoPlante.repiquage,
-                    joursMaturation: infoPlante.joursMaturation || 60
-                });
-            }
-        });
-    });
+    const dateMiseEnTerre = new Date(p.datePlantation);
+    const dateRecolteEstimee = new Date(dateMiseEnTerre);
+    
+    // Ajustement des jours de maturation selon le climat
+    dateRecolteEstimee.setDate(dateRecolteEstimee.getDate() + p.joursMaturation + decalage);
+
+    container.innerHTML += `
+        <div class="item-card">
+            <h4>${p.nom} (Carré #${p.carreId})</h4>
+            <p><strong>Climat détecté :</strong> ${window.zoneClimatiqueActuelle ? window.zoneClimatiqueActuelle.nom : "Standard"}</p>
+            <p><strong>Semis conseillé :</strong> ${p.semis}</p>
+            <p><strong>Mise en lasagne :</strong> ${p.datePlantation}</p>
+            <p style="color:green;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolteEstimee.toLocaleDateString('fr-FR')}</p>
+        </div>
+    `;
+});
+
 
     if (plantesEnTerre.length === 0) {
         container.innerHTML = "<p style='color:#666;'>Aucune plante actuellement installée dans le potager.</p>";
@@ -330,6 +343,9 @@ async function chargerMeteoEtAlertes() {
     navigator.geolocation.getCurrentPosition(async (position) => {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
+// À ajouter juste après : const lat = position.coords.latitude;
+window.zoneClimatiqueActuelle = obtenirZoneClimatique(lat);
+renderCalendrier(); // Met à jour le calendrier immédiatement avec le bon climat
 
         try {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto`;
