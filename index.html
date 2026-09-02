@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionnaire Potager Écoresponsable</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>🌱 Mon Potager en Lasagne</h1>
+        <p>Gestion écoresponsable, associations & suivi météo</p>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h2>1. Configuration des Carrés</h2>
+            <form id="form-carre">
+                <div class="form-group">
+                    <label>Longueur (cm)</label>
+                    <input type="number" id="longueur" value="120" required min="10">
+                </div>
+                <div class="form-group">
+                    <label>Largeur (cm)</label>
+                    <input type="number" id="largeur" value="120" required min="10">
+                </div>
+                <div class="form-group">
+                    <label>Hauteur (cm)</label>
+                    <input type="number" id="hauteur" value="40" required min="10">
+                </div>
+                <div class="form-group">
+                    <label>Exposition</label>
+                    <select id="exposition">
+                        <option value="SUD">Plein Sud</option>
+                        <option value="SUD_OUEST">Sud-Ouest</option>
+                        <option value="EST">Est</option>
+                        <option value="OUEST">Ouest</option>
+                        <option value="NORD">Nord</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Ajouter le carré</button>
+            </form>
+
+            <div id="liste-carres" class="grid-list"></div>
+        </section>
+
+        <section class="card">
+            <h2>2. Catalogue des Plantes</h2>
+            
+            <form id="form-plante" class="form-inline">
+                <h3>Ajouter une plante sur-mesure</h3>
+                <div class="form-row">
+                    <input type="text" id="p-nom" placeholder="Nom (ex: Courge)" required>
+                    <select id="p-categorie" required></select>
+                    <select id="p-soleil" required>
+                        <option value="SUD">Plein Soleil</option>
+                        <option value="MI_OMBRE">Mi-Ombre</option>
+                        <option value="OMBRE">Ombre</option>
+                    </select>
+                    <button type="submit" class="btn-secondary">Ajouter au catalogue</button>
+                </div>
+            </form>
+
+            <div class="filter-group">
+                <label>Filtrer par catégorie :</label>
+                <select id="filter-categorie"></select>
+            </div>
+
+            <div id="catalogue-plantes" class="grid-list"></div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
