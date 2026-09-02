@@ -18,38 +18,28 @@
             <h2>1. Configuration des Carrés</h2>
             <form id="form-carre">
                 <div class="form-group">
-                    <label>Longueur (cm)</label>
+                    <label for="longueur">Longueur (cm)</label>
                     <input type="number" id="longueur" value="120" required min="10">
                 </div>
                 <div class="form-group">
-                    <label>Largeur (cm)</label>
+                    <label for="largeur">Largeur (cm)</label>
                     <input type="number" id="largeur" value="120" required min="10">
                 </div>
                 <div class="form-group">
-                    <label>Hauteur (cm)</label>
+                    <label for="hauteur">Hauteur (cm)</label>
                     <input type="number" id="hauteur" value="40" required min="10">
                 </div>
                 <div class="form-group">
-    <label>Exposition</label>
-    <select id="exposition">
-        <option value="SUD">Plein Sud</option>
-        <option value="SUD_OUEST">Sud-Ouest</option>
-        <option value="SUD_EST">Sud-Est</option>
-        <option value="OUEST">Ouest</option>
-        <option value="EST">Est</option>
-        <option value="NORD">Nord</option>
-    </select>
-</div>
-<section class="card">
-    <h2>☀️ Météo Locale & Alertes Sanitaires</h2>
-    <button id="btn-meteo" class="btn-primary" onclick="chargerMeteoEtAlertes()">
-        🔄 Obtenir la météo locale & analyser les risques
-    </button>
-    
-    <div id="meteo-status" style="margin-top: 15px;"></div>
-    <div id="meteo-cards" class="grid-list" style="margin-top: 15px;"></div>
-</section>
-
+                    <label for="exposition">Exposition</label>
+                    <select id="exposition">
+                        <option value="SUD">Plein Sud</option>
+                        <option value="SUD_OUEST">Sud-Ouest</option>
+                        <option value="SUD_EST">Sud-Est</option>
+                        <option value="OUEST">Ouest</option>
+                        <option value="EST">Est</option>
+                        <option value="NORD">Nord</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn-primary">Ajouter le carré</button>
             </form>
 
@@ -74,17 +64,28 @@
             </form>
 
             <div class="filter-group">
-                <label>Filtrer par catégorie :</label>
+                <label for="filter-categorie">Filtrer par catégorie :</label>
                 <select id="filter-categorie"></select>
             </div>
 
             <div id="catalogue-plantes" class="grid-list"></div>
         </section>
+
+        <section class="card">
+            <h2>☀️ Météo Locale & Alertes Sanitaires</h2>
+            <button id="btn-meteo" class="btn-primary" onclick="chargerMeteoEtAlertes()">
+                🔄 Obtenir la météo locale & analyser les risques
+            </button>
+            
+            <div id="meteo-status" style="margin-top: 15px;"></div>
+            <div id="meteo-cards" class="grid-list" style="margin-top: 15px;"></div>
+        </section>
+
+        <section class="card">
+            <h2>📅 Calendrier des Semis & Estimation de Récolte</h2>
+            <div id="calendrier-container" class="grid-list"></div>
+        </section>
     </main>
-<section class="card">
-    <h2>📅 Calendrier des Semis & Estimation de Récolte</h2>
-    <div id="calendrier-container" class="grid-list"></div>
-</section>
 
     <script src="app.js"></script>
 </body>
