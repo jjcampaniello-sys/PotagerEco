@@ -14,6 +14,7 @@
     </header>
 
     <main class="container">
+        <!-- SECTION 1 : CONFIGURATION DES CARRÉS -->
         <section class="card">
             <h2>1. Configuration des Carrés</h2>
             <form id="form-carre">
@@ -21,7 +22,6 @@
                     <label for="longueur">Longueur (cm)</label>
                     <input type="number" id="longueur" value="120" required min="10">
                 </div>
-                <div id="statut-zone-climatique"></div>
                 <div class="form-group">
                     <label for="largeur">Largeur (cm)</label>
                     <input type="number" id="largeur" value="120" required min="10">
@@ -44,37 +44,38 @@
                 <button type="submit" class="btn-primary">Ajouter le carré</button>
             </form>
 
+            <div id="statut-zone-climatique" class="info-zone-box"></div>
             <div id="liste-carres" class="grid-list"></div>
         </section>
 
         <!-- SECTION 2 : CATALOGUE DES PLANTES -->
-<section class="card">
-    <h2>2. Catalogue des Plantes</h2>
-    <p><small>💡 <strong>Astuce :</strong> Cliquez sur une plante pour choisir un carré, ou <strong>glissez-déposez</strong> la carte directement dans une case de la grille d'un carré !</small></p>
-    
-    <form id="form-plante" class="form-inline">
-        <h3>Ajouter une plante sur-mesure</h3>
-        <div class="form-row">
-            <input type="text" id="p-nom" placeholder="Nom (ex: Courge)" required>
-            <select id="p-categorie" required></select>
-            <select id="p-soleil" required>
-                <option value="SUD">Plein Soleil</option>
-                <option value="MI_OMBRE">Mi-Ombre</option>
-                <option value="OMBRE">Ombre</option>
-            </select>
-            <button type="submit" class="btn-secondary">Ajouter au catalogue</button>
-        </div>
-    </form>
+        <section class="card">
+            <h2>2. Catalogue des Plantes</h2>
+            <p><small>💡 <strong>Astuce :</strong> Cliquez sur une plante pour l'associer à un carré potager.</small></p>
+            
+            <form id="form-plante" class="form-inline">
+                <h3>Ajouter une plante sur-mesure</h3>
+                <div class="form-row">
+                    <input type="text" id="p-nom" placeholder="Nom (ex: Courge)" required>
+                    <select id="p-categorie" required></select>
+                    <select id="p-soleil" required>
+                        <option value="SUD">Plein Soleil</option>
+                        <option value="MI_OMBRE">Mi-Ombre</option>
+                        <option value="OMBRE">Ombre</option>
+                    </select>
+                    <button type="submit" class="btn-secondary">Ajouter au catalogue</button>
+                </div>
+            </form>
 
-    <div class="filter-group">
-        <label for="filter-categorie">Filtrer par catégorie :</label>
-        <select id="filter-categorie"></select>
-    </div>
+            <div class="filter-group">
+                <label for="filter-categorie">Filtrer par catégorie :</label>
+                <select id="filter-categorie"></select>
+            </div>
 
-    <div id="catalogue-plantes" class="grid-list"></div>
-</section>
+            <div id="catalogue-plantes" class="grid-list"></div>
+        </section>
 
-
+        <!-- SECTION 3 : MÉTÉO LOCALE -->
         <section class="card">
             <h2>☀️ Météo Locale & Alertes Sanitaires</h2>
             <button id="btn-meteo" class="btn-primary" onclick="chargerMeteoEtAlertes()">
@@ -85,6 +86,7 @@
             <div id="meteo-cards" class="grid-list" style="margin-top: 15px;"></div>
         </section>
 
+        <!-- SECTION 4 : CALENDRIER -->
         <section class="card">
             <h2>📅 Calendrier des Semis & Estimation de Récolte</h2>
             <div id="calendrier-container" class="grid-list"></div>
