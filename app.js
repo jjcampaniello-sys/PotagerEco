@@ -253,6 +253,7 @@ function analyserCarré(carre) {
     return html || `<div style="color:#555; font-size:12px;">Associations neutres.</div>`;
 }
 
+// Affichage du catalogue avec cartes CLIQUABLES
 function renderPlantes() {
     const container = document.getElementById("catalogue-plantes");
     const filter = document.getElementById("filter-categorie").value;
@@ -266,15 +267,47 @@ function renderPlantes() {
 
     plantesFiltrees.forEach(p => {
         container.innerHTML += `
-            <div class="item-card">
-                <h4>${p.nom}</h4>
+            <div class="item-card item-cliquable" onclick="selectionnerPlantePourPlantation('${p.id}')" style="cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.2s;">
+                <h4>🌱 ${p.nom}</h4>
                 <p><strong>Catégorie :</strong> ${p.categorie}</p>
-                <p><strong>Période Semis :</strong> ${p.semis || "Spring"}</p>
-                <p><strong>Mise en terre :</strong> ${p.repiquage || "Mai"}</p>
+                <p><strong>Exposition :</strong> ${p.besoinSoleil}</p>
+                <p><strong>Espacement :</strong> ${p.distanceMin || 30} cm</p>
+                <button class="btn-secondary" style="margin-top: 8px; width: 100%;">➕ Planter dans un carré</button>
             </div>
         `;
     });
 }
+
+// Action déclenchée lorsqu'on clique sur une plante du catalogue
+function selectionnerPlantePourPlantation(planteId) {
+    if (carres.length === 0) {
+        alert("⚠️ Veuillez d'abord créer au moins un carré potager dans la Section 1 !");
+        return;
+    }
+
+    const plante = plantes.find(p => p.id === planteId);
+    if (!plante) return;
+
+    // Création d'une liste de choix des carrés disponibles
+    let options = carres.map(c => `Carré #${c.id} (${c.exposition})`).join("\n");
+    let choixCarre = prompt(`Dans quel carré souhaitez-vous planter la "${plante.nom}" ?\n\nEntrez le numéro du carré :\n${options}`);
+
+    if (choixCarre) {
+        const numCarre = Number(choixCarre.trim());
+        const carreCible = carres.find(c => c.id === numCarre);
+
+        if (carreCible) {
+            carreCible.ajouterPlante(planteId);
+            sauvegarderDonnees();
+            renderCarres();
+            renderCalendrier();
+            alert(`✅ "${plante.nom}" a été ajoutée au Carré #${carreCible.id} !\n📏 Conseil : Gardez une distance de ${plante.distanceMin || 30} cm avec les voisins.`);
+        } else {
+            alert("❌ Numéro de carré invalide.");
+        }
+    }
+}
+
 
 // =================================================================
 // 4. CALENDRIER ET PREDICTION DE RÉCOLTE
