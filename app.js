@@ -1,5 +1,5 @@
 // =================================================================
-// 1. LOGIQUE MÉTIER & CATALOGUE ÉLARGI
+// 1. LOGIQUE MÉTIER & CATALOGUE
 // =================================================================
 
 class CarrePotager {
@@ -9,20 +9,14 @@ class CarrePotager {
         this.largeur = Number(largeur);
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
-        this.plantes = []; // Plantes actuellement installées dans ce carré
+        this.plantes = [];
     }
 
     getSurface() { return (this.longueur * this.largeur) / 10000; }
     getVolumeLitres() { return (this.longueur * this.largeur * this.hauteur) / 1000; }
 
     ajouterPlante(planteId) {
-        if (!this.plantes.includes(planteId)) {
-            this.plantes.push(planteId);
-        }
-    }
-
-    retirerPlante(planteId) {
-        this.plantes = this.plantes.filter(id => id !== planteId);
+        if (!this.plantes.includes(planteId)) this.plantes.push(planteId);
     }
 }
 
@@ -44,69 +38,133 @@ const COMPATIBILITE_EXPOSITION = {
     "NORD": ["OMBRE", "MI_OMBRE"]
 };
 
-// Catalogue initial
 const catalogueInitial = [
     { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
     { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
     { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
-    { id: "aubergine", nom: "Aubergine", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD" },
-    
     { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
-    { id: "epinard", nom: "Épinard", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
-    { id: "poireau", nom: "Poireau", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE" },
-
     { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
     { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE" },
-    { id: "oignon", nom: "Oignon", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
-    { id: "pomme_de_terre", nom: "Pomme de terre", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD" },
-
     { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD" },
-    { id: "petit_pois", nom: "Petit pois", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE" },
-
     { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD" },
-    { id: "persil", nom: "Persil", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE" },
-
-    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
-    { id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" },
-    { id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" }
+    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD" }
 ];
 
-// =================================================================
-// 2. MATRICE D'ASSOCIATION (COMPAGNONNAGE)
-// =================================================================
-
 const MATRICE_ASSOCIATIONS = {
-    tomate: {
-        amis: ["basilic", "oeillet_inde", "carotte", "persil", "laitue"],
-        ennemis: ["pomme_de_terre", "courgettes", "fève"]
-    },
-    carotte: {
-        amis: ["poireau", "radis", "laitue", "oignon", "tomate"],
-        ennemis: ["aneth"]
-    },
-    poireau: {
-        amis: ["carotte", "fève", "laitue", "tomate"],
-        ennemis: ["haricot", "petit_pois", "oignon"]
-    },
-    haricot: {
-        amis: ["courgettes", "radis", "maïs", "basilic"],
-        ennemis: ["oignon", "poireau", "ail"]
-    },
-    basilic: {
-        amis: ["tomate", "poivron", "courgettes", "oeillet_inde"],
-        ennemis: []
-    },
-    oeillet_inde: {
-        amis: ["tomate", "courgettes", "poivron", "aubergine", "basilic"],
-        ennemis: []
-    }
+    tomate: { amis: ["basilic", "oeillet_inde", "carotte", "laitue"], ennemis: ["courgettes"] },
+    carotte: { amis: ["radis", "laitue", "tomate"], ennemis: [] },
+    haricot: { amis: ["courgettes", "radis", "basilic"], ennemis: [] },
+    basilic: { amis: ["tomate", "poivron", "oeillet_inde"], ennemis: [] },
+    oeillet_inde: { amis: ["tomate", "courgettes", "poivron", "basilic"], ennemis: [] }
 };
 
 const carres = [];
 const plantes = [...catalogueInitial];
 
 // =================================================================
-// 3. INTERFACE ET ÉVÉNEMENTS
+// 2. INTÉGRATION API MÉTÉO (OPEN-METEO) & PRÉVENTION
+// =================================================================
+
+async function chargerMeteoEtAlertes() {
+    const statusDiv = document.getElementById("meteo-status");
+    const container = document.getElementById("meteo-cards");
+
+    statusDiv.innerHTML = "<p>🔄 Géolocalisation et récupération des métriques...</p>";
+
+    if (!navigator.geolocation) {
+        statusDiv.innerHTML = "<p style='color:red;'>La géolocalisation n'est pas supportée par votre navigateur.</p>";
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+
+        try {
+            // Requete API Open-Meteo (Sans clé API)
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,precipitation_sum&timezone=auto`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            const temp = data.current.temperature_2m;
+            const humidite = data.current.relative_humidity_2m;
+            const pluie = data.current.precipitation;
+
+            statusDiv.innerHTML = `<p style='color:green;'>📍 Données météo récupérées (Lat: ${lat.toFixed(2)}, Lon: ${lon.toFixed(2)})</p>`;
+            
+            // Analyse des alertes
+            let alertesHtml = analyserRisquesMaladies(temp, humidite);
+            let arrosageHtml = analyserBesoinsArrosage(pluie, temp);
+
+            container.innerHTML = `
+                <div class="item-card">
+                    <h4>🌡️ Conditions Actuelles</h4>
+                    <p><strong>Température :</strong> ${temp} °C</p>
+                    <p><strong>Humidité de l'air :</strong> ${humidite} %</p>
+                    <p><strong>Précipitations :</strong> ${pluie} mm</p>
+                </div>
+                <div class="item-card">
+                    <h4>💧 Conseil Arrosage (Lasagne)</h4>
+                    ${arrosageHtml}
+                </div>
+                <div class="item-card">
+                    <h4>🛡️ Prévention Santé & Pathologies</h4>
+                    ${alertesHtml}
+                </div>
+            `;
+        } catch (error) {
+            statusDiv.innerHTML = "<p style='color:red;'>Erreur lors de la récupération des données météo.</p>";
+            console.error(error);
+        }
+    }, () => {
+        statusDiv.innerHTML = "<p style='color:red;'>Permission de géolocalisation refusée.</p>";
+    });
+}
+
+function analyserBesoinsArrosage(pluie, temp) {
+    if (pluie > 5) {
+        return "<p style='color:blue;'>🌧️ Pluie suffisante. <strong>Arrosage inutile</strong> aujourd'hui. La méthode lasagne retient efficacement cette humidité.</p>";
+    } else if (temp > 28) {
+        return "<p style='color:orange;'>🔥 Forte chaleur. Arrosez <strong>au pied</strong> tôt le matin ou après le coucher du soleil pour limiter l'évaporation.</p>";
+    } else {
+        return "<p style='color:green;'>🌱 Humidité stable. Vérifiez au toucher sous la première couche de paillage si le sol demeure frais.</p>";
+    }
+}
+
+function analyserRisquesMaladies(temp, humidite) {
+    let alertes = [];
+
+    // Alerte Mildiou (17°C <= T <= 25°C et Humidité > 80%)
+    if (temp >= 17 && temp <= 25 && humidite >= 80) {
+        alertes.push(`
+            <div style="color:red; margin-bottom:8px;">
+                🚨 <strong>Alerte Mildiou Élevée !</strong><br>
+                <em>Risque fort pour tomates et pommes de terre.</em><br>
+                <small><strong>Remèdes écoresponsables :</strong> Pulvérisez de la décoction de prêle ou du bicarbonate de soude (5g/L + savon noir). Évitez de mouiller le feuillage.</small>
+            </div>
+        `);
+    }
+
+    // Alerte Nécrose Apicale / Cul-Noir
+    if (temp >= 29) {
+        alertes.push(`
+            <div style="color:darkorange; margin-bottom:8px;">
+                ⚠️ <strong>Risque de Cul-Noir (Tomates) !</strong><br>
+                <em>Causes : Forte chaleur & régularité d'arrosage perturbée.</em><br>
+                <small><strong>Remèdes :</strong> Paillez généreusement la lasagne pour conserver un taux de calcium assimilable constant.</small>
+            </div>
+        `);
+    }
+
+    if (alertes.length === 0) {
+        return "<p style='color:green;'>✅ Aucun risque majeur de maladie cryptogamique détecté aujourd'hui.</p>";
+    }
+
+    return alertes.join("");
+}
+
+// =================================================================
+// 3. INITIALISATION DE L'APPLICATION
 // =================================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -167,9 +225,6 @@ function renderCarres() {
         const brun = (volume * 0.3).toFixed(0);
         const vert = (volume * 0.3).toFixed(0);
 
-        // Analyse du compagnonnage dans ce carré
-        const analyseCompagnonnage = analyserCarré(c);
-
         container.innerHTML += `
             <div class="item-card">
                 <h4>Carré #${c.id} (${c.exposition})</h4>
@@ -179,7 +234,7 @@ function renderCarres() {
                 <div style="margin-top:10px; padding:8px; background:#fff; border-radius:4px;">
                     <strong>Plantes installées :</strong>
                     <p>${c.plantes.length === 0 ? '<em>Aucune plante</em>' : c.plantes.map(id => getNomPlante(id)).join(', ')}</p>
-                    ${analyseCompagnonnage}
+                    ${analyserCarré(c)}
                 </div>
 
                 <div style="margin-top:10px;">
@@ -199,10 +254,8 @@ function getNomPlante(id) {
     return p ? p.nom : id;
 }
 
-// Filtre les options de plantes selon l'exposition et évite les doublons
 function getOptionsPlantesCompatibles(carre) {
     const expositionsAdmissibles = COMPATIBILITE_EXPOSITION[carre.exposition] || [];
-    
     return plantes
         .filter(p => expositionsAdmissibles.includes(p.besoinSoleil) && !carre.plantes.includes(p.id))
         .map(p => `<option value="${p.id}">${p.nom} (${p.categorie})</option>`)
@@ -218,7 +271,6 @@ function ajouterPlanteAuCarre(carreId, planteId) {
     }
 }
 
-// Algorithme d'analyse des associations dans le carré
 function analyserCarré(carre) {
     if (carre.plantes.length < 2) return "<p style='color:#666;'><small>Ajoutez au moins 2 plantes pour vérifier le compagnonnage.</small></p>";
 
@@ -231,10 +283,10 @@ function analyserCarré(carre) {
             const p2 = carre.plantes[j];
 
             if (MATRICE_ASSOCIATIONS[p1]?.amis.includes(p2)) {
-                alertesBonnes.push(`✅ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Excellente association !`);
+                alertesBonnes.push(`✅ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Bonne association`);
             }
             if (MATRICE_ASSOCIATIONS[p1]?.ennemis.includes(p2)) {
-                alertesMauvaises.push(`⚠️ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Mauvais voisins !`);
+                alertesMauvaises.push(`⚠️ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Mauvaise association`);
             }
         }
     }
@@ -242,11 +294,7 @@ function analyserCarré(carre) {
     let html = "";
     if (alertesBonnes.length > 0) html += `<div style="color:green; font-size:12px;">${alertesBonnes.join('<br>')}</div>`;
     if (alertesMauvaises.length > 0) html += `<div style="color:red; font-size:12px;">${alertesMauvaises.join('<br>')}</div>`;
-    if (alertesBonnes.length === 0 && alertesMauvaises.length === 0) {
-        html += `<div style="color:#555; font-size:12px;">Associations neutres.</div>`;
-    }
-
-    return html;
+    return html || `<div style="color:#555; font-size:12px;">Associations neutres.</div>`;
 }
 
 function renderPlantes() {
