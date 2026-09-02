@@ -95,14 +95,46 @@ const catalogueInitial = [
 
 const MATRICE_ASSOCIATIONS = {
     tomate: {
-        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ L'Œillet d'Inde repousse les nématodes et pucerons." },
-        basilic: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Le basilic stimule la pousse de la tomate et améliore sa saveur." },
-        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot fournit de l'azote assimilable au pied de la tomate." }
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ L'Œillet d'Inde repousse les nématodes du sol et les pucerons." },
+        basilic: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Le basilic stimule la pousse de la tomate, améliore sa saveur et éloigne le mildiou." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot fixe l'azote de l'air pour fertiliser le pied de tomate." },
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🤝 Bon compagnonnage racinaire : l'enracinement profond de la carotte n'entre pas en conflit avec la tomate." }
     },
     courgettes: {
-        bourrache: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 La Bourrache attire les abeilles indispensables à la formation des courgettes." }
+        bourrache: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 La Bourrache attire massivement les abeilles nécessaires à la pollinisation des fleurs de courgette." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "30-35 cm", conseil: "🌿 Le haricot enrichit le sol en azote, profitant au feuillage gourmand de la courgette." },
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "20-25 cm", conseil: "🛡️ Aide à limiter la pression des pucerons sur les jeunes pousses." }
+    },
+    haricot_vert: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot fournit de l'azote naturel utilisable par la tomate." },
+        courgettes: { type: "COMPAGNONNAGE_DIRECT", distance: "30-35 cm", conseil: "🌿 Synergie idéale : enrichit la terre en azote pour la courgette." },
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Association classique du potager : la carotte profite de l'azote du haricot." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🥬 La laitue s'épanouit au pied des haricots sans gêner leurs racines." }
+    },
+    laitue: {
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Les racines superficielles de la salade ne gênent pas le développement bulbeux de la carotte." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🥬 Profite de l'azote fixé par les fabacées et de leur ombre légère." },
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "⛱️ Profite de l'ombrage tamisé du feuillage de la tomate pendant les chaudes journées." }
+    },
+    carotte: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🤝 Occupation optimale du sol : occupation racinaire à des profondeurs différentes." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Bon gain d'espace : récolte rapide de la laitue libérant l'espace pour la carotte." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🌿 Bénéficie de la fertilisation azotée naturelle apportée par le haricot." }
+    },
+    basilic: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Alliance phare du potager : amélioration gustative et répulsif anti-moustiques/mouches." },
+        courgettes: { type: "PROTECTION_SANITAIRE", distance: "20-25 cm", conseil: "🛡️ Son parfum fort masque les plantes et repousse certains nuisibles." }
+    },
+    oeillet_inde: {
+        tomate: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ Protection bio efficace contre les nématodes racinaires." },
+        courgettes: { type: "PROTECTION_SANITAIRE", distance: "20-25 cm", conseil: "🛡️ Éloigne les altises et pucerons du feuillage." }
+    },
+    bourrache: {
+        courgettes: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Plante mellifère majeure augmentant le rendement des courgettes." },
+        tomate: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Attire les pollinisateurs et repousse le sphinx de la tomate." }
     }
 };
+
 
 let carres = [];
 let plantes = [...catalogueInitial];
