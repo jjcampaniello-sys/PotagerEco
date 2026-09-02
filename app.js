@@ -1,5 +1,5 @@
 // =================================================================
-// 1. CLASSES ET DONNÉES DU POTAGER
+// 1. CLASSES ET STRUCTURATION DES DONNÉES
 // =================================================================
 
 class CarrePotager {
@@ -9,19 +9,31 @@ class CarrePotager {
         this.largeur = Number(largeur);
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
-        this.plantes = []; // [{ idPlante, datePlantation }]
+        // Grille de 9 cases (3x3). Chaque case contient null ou un objet { idPlante, datePlantation }
+        this.grille = Array(9).fill(null);
     }
 
     getSurface() { return (this.longueur * this.largeur) / 10000; }
     getVolumeLitres() { return (this.longueur * this.largeur * this.hauteur) / 1000; }
 
-    ajouterPlante(idPlante) {
-        if (!this.plantes.some(p => p.idPlante === idPlante)) {
-            this.plantes.push({
+    placerPlanteCase(indexCase, idPlante) {
+        if (indexCase >= 0 && indexCase < 9) {
+            this.grille[indexCase] = {
                 idPlante: idPlante,
                 datePlantation: new Date().toISOString().split('T')[0]
-            });
+            };
         }
+    }
+
+    retirerPlanteCase(indexCase) {
+        if (indexCase >= 0 && indexCase < 9) {
+            this.grille[indexCase] = null;
+        }
+    }
+
+    getPlantesUnique() {
+        const occupes = this.grille.filter(c => c !== null);
+        return [...new Set(occupes.map(c => c.idPlante))];
     }
 }
 
@@ -43,28 +55,17 @@ const COMPATIBILITE_EXPOSITION = {
     "NORD": ["OMBRE", "MI_OMBRE"]
 };
 
-// Détermine la zone climatique selon la latitude
-function obtenirZoneClimatique(latitude) {
-    if (latitude < 44.0) {
-        return { nom: "Méditerranéen / Sud", decalageJours: -21 }; // 3 semaines plus tôt
-    } else if (latitude >= 44.0 && latitude < 48.5) {
-        return { nom: "Tempéré (ex: Région Parisienne, Ouest)", decalageJours: 0 }; // Référence
-    } else {
-        return { nom: "Nordique / Continental (ex: Pays-Bas, Nord)", decalageJours: 14 }; // 2 semaines plus tard
-    }
-}
-
-// Catalogue enrichi avec données phénologiques (semis, repiquage, jours de croissance)
+// Catalogue avec distances minimales recommandées
 const catalogueInitial = [
-    { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 75 },
-    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai - Juin", joursMaturation: 60 },
-    { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Février - Mars", repiquage: "Mai", joursMaturation: 85 },
-    { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Avril - Octobre", joursMaturation: 45 },
-    { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Mars - Juillet", repiquage: "Semis direct", joursMaturation: 80 },
-    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Semis direct", joursMaturation: 25 },
-    { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Mai - Juillet", repiquage: "Semis direct", joursMaturation: 60 },
-    { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai", joursMaturation: 30 },
-    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 50 }
+    { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 75, distanceMin: 45 },
+    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai - Juin", joursMaturation: 60, distanceMin: 60 },
+    { id: "poivron", nom: "Poivron / Piment", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Février - Mars", repiquage: "Mai", joursMaturation: 85, distanceMin: 40 },
+    { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Avril - Octobre", joursMaturation: 45, distanceMin: 25 },
+    { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Mars - Juillet", repiquage: "Semis direct", joursMaturation: 80, distanceMin: 10 },
+    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Semis direct", joursMaturation: 25, distanceMin: 5 },
+    { id: "haricot", nom: "Haricot vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Mai - Juillet", repiquage: "Semis direct", joursMaturation: 60, distanceMin: 20 },
+    { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai", joursMaturation: 30, distanceMin: 20 },
+    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", joursMaturation: 50, distanceMin: 15 }
 ];
 
 const MATRICE_ASSOCIATIONS = {
@@ -77,19 +78,20 @@ const MATRICE_ASSOCIATIONS = {
 
 let carres = [];
 let plantes = [...catalogueInitial];
+window.zoneClimatiqueActuelle = { nom: "Standard", decalageJours: 0 };
 
 // =================================================================
-// 2. SAUVEGARDE LOCALE & INITIALISATION
+// 2. STOCKAGE LOCAL & INITIALISATION
 // =================================================================
 
 function sauvegarderDonnees() {
-    localStorage.setItem("potager_carres", JSON.stringify(carres));
-    localStorage.setItem("potager_plantes", JSON.stringify(plantes));
+    localStorage.setItem("potager_carres_v5", JSON.stringify(carres));
+    localStorage.setItem("potager_plantes_v5", JSON.stringify(plantes));
 }
 
 function chargerDonneesStockees() {
-    const carresStockes = localStorage.getItem("potager_carres");
-    const plantesStockees = localStorage.getItem("potager_plantes");
+    const carresStockes = localStorage.getItem("potager_carres_v5");
+    const plantesStockees = localStorage.getItem("potager_plantes_v5");
 
     if (plantesStockees) plantes = JSON.parse(plantesStockees);
 
@@ -97,7 +99,7 @@ function chargerDonneesStockees() {
         const donneesBrutes = JSON.parse(carresStockes);
         carres = donneesBrutes.map(c => {
             const carre = new CarrePotager(c.id, c.longueur, c.largeur, c.hauteur, c.exposition);
-            carre.plantes = c.plantes || [];
+            carre.grille = c.grille || Array(9).fill(null);
             return carre;
         });
     }
@@ -110,7 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPlantes();
     renderCalendrier();
 
-    // Ajout d'un carré
     document.getElementById("form-carre").addEventListener("submit", (e) => {
         e.preventDefault();
         const L = document.getElementById("longueur").value;
@@ -120,14 +121,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const nouveauCarre = new CarrePotager(carres.length + 1, L, l, h, expo);
         carres.push(nouveauCarre);
-        
+
         sauvegarderDonnees();
         renderCarres();
         renderCalendrier();
         e.target.reset();
     });
 
-    // Ajout d'une plante sur-mesure
     document.getElementById("form-plante").addEventListener("submit", (e) => {
         e.preventDefault();
         const nom = document.getElementById("p-nom").value.trim();
@@ -136,12 +136,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!nom) return;
         const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
-        
-        plantes.push({ 
-            id, nom, categorie, besoinSoleil, 
-            semis: "Ajuster selon saison", 
-            repiquage: "Pleine terre", 
-            joursMaturation: 60 
+
+        plantes.push({
+            id, nom, categorie, besoinSoleil,
+            semis: "Printemps", repiquage: "Pleine terre",
+            joursMaturation: 60, distanceMin: 25
         });
 
         sauvegarderDonnees();
@@ -152,10 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("filter-categorie").addEventListener("change", renderPlantes);
 });
-
-// =================================================================
-// 3. AFFICHAGE DES COMPOSANTS
-// =================================================================
 
 function initSelects() {
     const selectCat = document.getElementById("p-categorie");
@@ -170,6 +165,10 @@ function initSelects() {
     });
 }
 
+// =================================================================
+// 3. AFFICHAGE ET INTERACTION AVEC LES CARRÉS (GRILLE 3x3)
+// =================================================================
+
 function renderCarres() {
     const container = document.getElementById("liste-carres");
     container.innerHTML = "";
@@ -179,81 +178,109 @@ function renderCarres() {
         const brun = (volume * 0.3).toFixed(0);
         const vert = (volume * 0.3).toFixed(0);
 
+        let htmlGrille = `<div class="grille-potager">`;
+        for (let index = 0; index < 9; index++) {
+            const contenuCase = c.grille[index];
+            if (contenuCase) {
+                const nomP = getNomPlante(contenuCase.idPlante);
+                htmlGrille += `
+                    <div class="case-grille plante-occupee" onclick="libererCase(${c.id}, ${index})">
+                        🌿 <strong>${nomP}</strong>
+                        <small style="font-size:9px;">${contenuCase.datePlantation}</small>
+                        <button class="btn-suppr-case" title="Supprimer">❌</button>
+                    </div>
+                `;
+            } else {
+                htmlGrille += `
+                    <div class="case-grille" 
+                         ondragover="allowDrop(event)" 
+                         ondragleave="removeDragOver(event)"
+                         ondrop="dropPlante(event, ${c.id}, ${index})"
+                         onclick="attribuerCaseParClic(${c.id}, ${index})">
+                        <span style="color:#aaa;">Emplacement ${index + 1}</span>
+                        <small style="color:#888;">+ Ajouter</small>
+                    </div>
+                `;
+            }
+        }
+        htmlGrille += `</div>`;
+
         container.innerHTML += `
             <div class="item-card">
                 <h4>Carré #${c.id} (${c.exposition})</h4>
                 <p><strong>Taille :</strong> ${c.longueur}x${c.largeur}x${c.hauteur} cm</p>
-                <p><strong>Volume Lasagne :</strong> ${volume.toFixed(0)}L (Brun: ~${brun}L / Vert: ~${vert}L)</p>
+                <p><strong>Lasagne :</strong> ${volume.toFixed(0)}L (Brun: ~${brun}L / Vert: ~${vert}L)</p>
                 
-                <div style="margin-top:10px; padding:8px; background:#fff; border-radius:4px;">
-                    <strong>Plantes installées :</strong>
-                    <p>${c.plantes.length === 0 ? '<em>Aucune plante</em>' : c.plantes.map(p => getNomPlante(p.idPlante)).join(', ')}</p>
-                    ${analyserCarré(c)}
-                </div>
+                <strong>Grille du carré (Placer vos légumes) :</strong>
+                ${htmlGrille}
 
-                <div style="margin-top:10px;">
-                    <label><strong>Ajouter une plante :</strong></label>
-                    <select onchange="ajouterPlanteAuCarre(${c.id}, this.value)">
-                        <option value="">-- Choisir une plante --</option>
-                        ${getOptionsPlantesCompatibles(c)}
-                    </select>
+                <div style="margin-top:10px; padding:8px; background:#fff; border-radius:4px;">
+                    ${analyserCarré(c)}
                 </div>
             </div>
         `;
     });
 }
 
-function ajouterPlanteAuCarre(carreId, planteId) {
-    if (!planteId) return;
+function libererCase(carreId, indexCase) {
     const carre = carres.find(c => c.id === carreId);
     if (carre) {
-        carre.ajouterPlante(planteId);
+        carre.retirerPlanteCase(indexCase);
         sauvegarderDonnees();
         renderCarres();
         renderCalendrier();
     }
 }
 
-function getNomPlante(id) {
-    const p = plantes.find(item => item.id === id);
-    return p ? p.nom : id;
-}
+function attribuerCaseParClic(carreId, indexCase) {
+    const carre = carres.find(c => c.id === carreId);
+    if (!carre) return;
 
-function getOptionsPlantesCompatibles(carre) {
     const expositionsAdmissibles = COMPATIBILITE_EXPOSITION[carre.exposition] || [];
-    return plantes
-        .filter(p => expositionsAdmissibles.includes(p.besoinSoleil) && !carre.plantes.some(item => item.idPlante === p.id))
-        .map(p => `<option value="${p.id}">${p.nom} (${p.categorie})</option>`)
-        .join("");
-}
+    const disponibles = plantes.filter(p => expositionsAdmissibles.includes(p.besoinSoleil));
 
-function analyserCarré(carre) {
-    if (carre.plantes.length < 2) return "<p style='color:#666;'><small>Ajoutez au moins 2 plantes pour vérifier le compagnonnage.</small></p>";
+    let optionsStr = disponibles.map((p, idx) => `${idx + 1}. ${p.nom} (Espacement rec.: ${p.distanceMin || 20}cm)`).join("\n");
+    let choix = prompt(`Sélectionnez une plante pour la case ${indexCase + 1} du Carré #${carre.id} :\n\n${optionsStr}\n\nEntrez le numéro du choix :`);
 
-    let alertesBonnes = [];
-    let alertesMauvaises = [];
-
-    for (let i = 0; i < carre.plantes.length; i++) {
-        for (let j = i + 1; j < carre.plantes.length; j++) {
-            const p1 = carre.plantes[i].idPlante;
-            const p2 = carre.plantes[j].idPlante;
-
-            if (MATRICE_ASSOCIATIONS[p1]?.amis.includes(p2)) {
-                alertesBonnes.push(`✅ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Bonne association`);
-            }
-            if (MATRICE_ASSOCIATIONS[p1]?.ennemis.includes(p2)) {
-                alertesMauvaises.push(`⚠️ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Mauvaise association`);
-            }
+    if (choix) {
+        const indexPlante = Number(choix.trim()) - 1;
+        if (disponibles[indexPlante]) {
+            carre.placerPlanteCase(indexCase, disponibles[indexPlante].id);
+            sauvegarderDonnees();
+            renderCarres();
+            renderCalendrier();
         }
     }
-
-    let html = "";
-    if (alertesBonnes.length > 0) html += `<div style="color:green; font-size:12px;">${alertesBonnes.join('<br>')}</div>`;
-    if (alertesMauvaises.length > 0) html += `<div style="color:red; font-size:12px;">${alertesMauvaises.join('<br>')}</div>`;
-    return html || `<div style="color:#555; font-size:12px;">Associations neutres.</div>`;
 }
 
-// Affichage du catalogue avec cartes CLIQUABLES
+// Support du Drag-and-Drop
+function allowDrop(ev) {
+    ev.preventDefault();
+    ev.currentTarget.classList.add('drag-over');
+}
+
+function removeDragOver(ev) {
+    ev.currentTarget.classList.remove('drag-over');
+}
+
+function dropPlante(ev, carreId, indexCase) {
+    ev.preventDefault();
+    ev.currentTarget.classList.remove('drag-over');
+    const planteId = ev.dataTransfer.getData("text/plain");
+
+    const carre = carres.find(c => c.id === carreId);
+    if (carre && planteId) {
+        carre.placerPlanteCase(indexCase, planteId);
+        sauvegarderDonnees();
+        renderCarres();
+        renderCalendrier();
+    }
+}
+
+// =================================================================
+// 4. CATALOGUE ET CLIC SUR PLANTES
+// =================================================================
+
 function renderPlantes() {
     const container = document.getElementById("catalogue-plantes");
     const filter = document.getElementById("filter-categorie").value;
@@ -267,91 +294,143 @@ function renderPlantes() {
 
     plantesFiltrees.forEach(p => {
         container.innerHTML += `
-            <div class="item-card item-cliquable" onclick="selectionnerPlantePourPlantation('${p.id}')" style="cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.2s;">
+            <div class="item-card item-cliquable" 
+                 draggable="true" 
+                 ondragstart="dragStart(event, '${p.id}')"
+                 onclick="selectionnerPlantePourPlantation('${p.id}')" 
+                 style="cursor: grab; border: 2px solid #e0e0e0;">
                 <h4>🌱 ${p.nom}</h4>
                 <p><strong>Catégorie :</strong> ${p.categorie}</p>
                 <p><strong>Exposition :</strong> ${p.besoinSoleil}</p>
-                <p><strong>Espacement :</strong> ${p.distanceMin || 30} cm</p>
-                <button class="btn-secondary" style="margin-top: 8px; width: 100%;">➕ Planter dans un carré</button>
+                <p><strong>Espacement :</strong> ${p.distanceMin || 25} cm</p>
+                <button class="btn-secondary" style="margin-top: 8px; width: 100%;">➕ Choisir le carré</button>
             </div>
         `;
     });
 }
 
-// Action déclenchée lorsqu'on clique sur une plante du catalogue
+function dragStart(ev, planteId) {
+    ev.dataTransfer.setData("text/plain", planteId);
+}
+
 function selectionnerPlantePourPlantation(planteId) {
     if (carres.length === 0) {
-        alert("⚠️ Veuillez d'abord créer au moins un carré potager dans la Section 1 !");
+        alert("⚠️ Veuillez créer un carré potager dans la Section 1 !");
         return;
     }
 
     const plante = plantes.find(p => p.id === planteId);
-    if (!plante) return;
-
-    // Création d'une liste de choix des carrés disponibles
     let options = carres.map(c => `Carré #${c.id} (${c.exposition})`).join("\n");
-    let choixCarre = prompt(`Dans quel carré souhaitez-vous planter la "${plante.nom}" ?\n\nEntrez le numéro du carré :\n${options}`);
+    let choixCarre = prompt(`Dans quel carré placer la "${plante.nom}" ?\n\n${options}\n\nEntrez le N° du carré :`);
 
     if (choixCarre) {
         const numCarre = Number(choixCarre.trim());
         const carreCible = carres.find(c => c.id === numCarre);
 
         if (carreCible) {
-            carreCible.ajouterPlante(planteId);
-            sauvegarderDonnees();
-            renderCarres();
-            renderCalendrier();
-            alert(`✅ "${plante.nom}" a été ajoutée au Carré #${carreCible.id} !\n📏 Conseil : Gardez une distance de ${plante.distanceMin || 30} cm avec les voisins.`);
-        } else {
-            alert("❌ Numéro de carré invalide.");
+            const caseLibre = carreCible.grille.findIndex(c => c === null);
+            if (caseLibre !== -1) {
+                carreCible.placerPlanteCase(caseLibre, planteId);
+                sauvegarderDonnees();
+                renderCarres();
+                renderCalendrier();
+                alert(`✅ "${plante.nom}" placée dans le Carré #${carreCible.id} (Emplacement ${caseLibre + 1}) !\n📏 Espacement recommandé : ${plante.distanceMin || 25} cm.`);
+            } else {
+                alert("❌ Ce carré est complet (9/9 emplacements occupés).");
+            }
         }
     }
 }
 
+function getNomPlante(id) {
+    const p = plantes.find(item => item.id === id);
+    return p ? p.nom : id;
+}
+
+function analyserCarré(carre) {
+    const plantesPresentes = carre.getPlantesUnique();
+    if (plantesPresentes.length < 2) return "<p style='color:#666;'><small>Ajoutez au moins 2 plantes dans la grille pour analyser le compagnonnage.</small></p>";
+
+    let alertesBonnes = [];
+    let alertesMauvaises = [];
+
+    for (let i = 0; i < plantesPresentes.length; i++) {
+        for (let j = i + 1; j < plantesPresentes.length; j++) {
+            const p1 = plantesPresentes[i];
+            const p2 = plantesPresentes[j];
+
+            if (MATRICE_ASSOCIATIONS[p1]?.amis.includes(p2)) {
+                alertesBonnes.push(`✅ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Très bonne association !`);
+            }
+            if (MATRICE_ASSOCIATIONS[p1]?.ennemis.includes(p2)) {
+                alertesMauvaises.push(`⚠️ <strong>${getNomPlante(p1)}</strong> + <strong>${getNomPlante(p2)}</strong> : Mauvais voisins !`);
+            }
+        }
+    }
+
+    let html = "";
+    if (alertesBonnes.length > 0) html += `<div style="color:green; font-size:12px;">${alertesBonnes.join('<br>')}</div>`;
+    if (alertesMauvaises.length > 0) html += `<div style="color:red; font-size:12px;">${alertesMauvaises.join('<br>')}</div>`;
+    return html || `<div style="color:#555; font-size:12px;">Associations neutres.</div>`;
+}
 
 // =================================================================
-// 4. CALENDRIER ET PREDICTION DE RÉCOLTE
+// 5. CALENDRIER DE RÉCOLTE & CLIMAT DYNAMIQUE
 // =================================================================
 
-// Dans renderCalendrier(), modifiez la boucle d'affichage :
-plantesEnTerre.forEach(p => {
-    // Récupération du décalage (par défaut 0 si non géolocalisé)
-    const decalage = window.zoneClimatiqueActuelle ? window.zoneClimatiqueActuelle.decalageJours : 0;
+function obtenirZoneClimatique(latitude) {
+    if (latitude < 44.0) {
+        return { nom: "Méditerranéen / Sud", decalageJours: -21 };
+    } else if (latitude >= 44.0 && latitude < 48.5) {
+        return { nom: "Tempéré (ex: Région Parisienne / Ouest)", decalageJours: 0 };
+    } else {
+        return { nom: "Nordique / Continental (ex: Pays-Bas / Nord)", decalageJours: 14 };
+    }
+}
 
-    const dateMiseEnTerre = new Date(p.datePlantation);
-    const dateRecolteEstimee = new Date(dateMiseEnTerre);
-    
-    // Ajustement des jours de maturation selon le climat
-    dateRecolteEstimee.setDate(dateRecolteEstimee.getDate() + p.joursMaturation + decalage);
+function renderCalendrier() {
+    const container = document.getElementById("calendrier-container");
+    container.innerHTML = "";
 
-    container.innerHTML += `
-        <div class="item-card">
-            <h4>${p.nom} (Carré #${p.carreId})</h4>
-            <p><strong>Climat détecté :</strong> ${window.zoneClimatiqueActuelle ? window.zoneClimatiqueActuelle.nom : "Standard"}</p>
-            <p><strong>Semis conseillé :</strong> ${p.semis}</p>
-            <p><strong>Mise en lasagne :</strong> ${p.datePlantation}</p>
-            <p style="color:green;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolteEstimee.toLocaleDateString('fr-FR')}</p>
-        </div>
-    `;
-});
-
+    let plantesEnTerre = [];
+    carres.forEach(c => {
+        c.grille.forEach((item, index) => {
+            if (item) {
+                const infoPlante = plantes.find(p => p.id === item.idPlante);
+                if (infoPlante) {
+                    plantesEnTerre.push({
+                        carreId: c.id,
+                        caseIndex: index + 1,
+                        nom: infoPlante.nom,
+                        datePlantation: item.datePlantation,
+                        semis: infoPlante.semis,
+                        joursMaturation: infoPlante.joursMaturation || 60,
+                        distanceMin: infoPlante.distanceMin || 25
+                    });
+                }
+            }
+        });
+    });
 
     if (plantesEnTerre.length === 0) {
-        container.innerHTML = "<p style='color:#666;'>Aucune plante actuellement installée dans le potager.</p>";
+        container.innerHTML = "<p style='color:#666;'>Aucune plante actuellement installée dans la grille du potager.</p>";
         return;
     }
 
+    const decalage = window.zoneClimatiqueActuelle.decalageJours;
+
     plantesEnTerre.forEach(p => {
-        // Estimation de la date de récolte
         const dateMiseEnTerre = new Date(p.datePlantation);
         const dateRecolteEstimee = new Date(dateMiseEnTerre);
-        dateRecolteEstimee.setDate(dateRecolteEstimee.getDate() + p.joursMaturation);
+        dateRecolteEstimee.setDate(dateRecolteEstimee.getDate() + p.joursMaturation + decalage);
 
         container.innerHTML += `
             <div class="item-card">
-                <h4>${p.nom} (Carré #${p.carreId})</h4>
+                <h4>${p.nom} (Carré #${p.carreId} - Case ${p.caseIndex})</h4>
+                <p><strong>Climat local :</strong> ${window.zoneClimatiqueActuelle.nom}</p>
                 <p><strong>Semis conseillé :</strong> ${p.semis}</p>
-                <p><strong>Mise en lasagne :</strong> ${p.datePlantation}</p>
+                <p><strong>Plantation :</strong> ${p.datePlantation}</p>
+                <p><strong>Espacement :</strong> ${p.distanceMin} cm</p>
                 <p style="color:green;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolteEstimee.toLocaleDateString('fr-FR')}</p>
             </div>
         `;
@@ -359,14 +438,14 @@ plantesEnTerre.forEach(p => {
 }
 
 // =================================================================
-// 5. INTÉGRATION MÉTÉO (OPEN-METEO)
+// 6. INTÉGRATION MÉTÉO (OPEN-METEO)
 // =================================================================
 
 async function chargerMeteoEtAlertes() {
     const statusDiv = document.getElementById("meteo-status");
     const container = document.getElementById("meteo-cards");
 
-    statusDiv.innerHTML = "<p>🔄 Géolocalisation et météo en cours...</p>";
+    statusDiv.innerHTML = "<p>🔄 Géolocalisation et récupération météo...</p>";
 
     if (!navigator.geolocation) {
         statusDiv.innerHTML = "<p style='color:red;'>La géolocalisation n'est pas supportée par votre navigateur.</p>";
@@ -376,9 +455,9 @@ async function chargerMeteoEtAlertes() {
     navigator.geolocation.getCurrentPosition(async (position) => {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
-// À ajouter juste après : const lat = position.coords.latitude;
-window.zoneClimatiqueActuelle = obtenirZoneClimatique(lat);
-renderCalendrier(); // Met à jour le calendrier immédiatement avec le bon climat
+
+        window.zoneClimatiqueActuelle = obtenirZoneClimatique(lat);
+        renderCalendrier();
 
         try {
             const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto`;
@@ -389,26 +468,26 @@ renderCalendrier(); // Met à jour le calendrier immédiatement avec le bon clim
             const humidite = data.current.relative_humidity_2m;
             const pluie = data.current.precipitation;
 
-            statusDiv.innerHTML = `<p style='color:green;'>📍 Données météo à jour pour votre zone</p>`;
+            statusDiv.innerHTML = `<p style='color:green;'>📍 Météo synchronisée pour votre position (${window.zoneClimatiqueActuelle.nom})</p>`;
 
             container.innerHTML = `
                 <div class="item-card">
-                    <h4>🌡️ Météo Actuelle</h4>
+                    <h4>🌡️ Météo Locale</h4>
                     <p><strong>Température :</strong> ${temp} °C</p>
                     <p><strong>Humidité :</strong> ${humidite} %</p>
                     <p><strong>Précipitations :</strong> ${pluie} mm</p>
                 </div>
                 <div class="item-card">
                     <h4>💧 Conseil Arrosage</h4>
-                    ${pluie > 5 ? "🌧️ Pluie suffisante. Pas d'arrosage nécessaire." : "🌱 Vérifier la lasagne sous le paillage."}
+                    ${pluie > 5 ? "🌧️ Pluie suffisante. Inutile d'arroser la lasagne." : "🌱 Vérifiez la fraîcheur sous la lasagne."}
                 </div>
                 <div class="item-card">
-                    <h4>🛡️ Santé & Pathologies</h4>
-                    ${temp >= 17 && temp <= 25 && humidite >= 80 ? "🚨 <strong>Alerte Mildiou !</strong> Pulvérisez de la prêle." : "✅ Aucun risque majeur détecté."}
+                    <h4>🛡️ Santé Plante</h4>
+                    ${temp >= 17 && temp <= 25 && humidite >= 80 ? "🚨 <strong>Alerte Mildiou !</strong> Traitez préventivement avec de la prêle." : "✅ Aucun risque sanitaire fort détecté."}
                 </div>
             `;
         } catch (error) {
-            statusDiv.innerHTML = "<p style='color:red;'>Erreur lors de la récupération des données météo.</p>";
+            statusDiv.innerHTML = "<p style='color:red;'>Erreur de connexion météo.</p>";
         }
     });
 }
