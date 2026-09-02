@@ -1,0 +1,97 @@
+:root {
+    --bg-color: #f4f7f4;
+    --card-bg: #ffffff;
+    --primary: #2e7d32;
+    --primary-hover: #1b5e20;
+    --secondary: #8d6e63;
+    --text: #2c3e50;
+    --border: #e0e0e0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 { margin: 0; color: var(--primary); }
+header p { margin-top: 5px; color: #666; }
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.form-group, .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+
+.form-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+form-inline {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+input, select, button {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+    font-weight: bold;
+    border: none;
+    transition: background 0.2s;
+}
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary { background: var(--secondary); color: white; }
+
+.grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.item-card {
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    padding: 12px;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.item-card h4 { margin: 0 0 8px 0; color: var(--primary); }
+.item-card p { margin: 4px 0; font-size: 13px; }
+.badge { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
