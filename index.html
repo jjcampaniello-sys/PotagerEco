@@ -46,30 +46,33 @@
             <div id="liste-carres" class="grid-list"></div>
         </section>
 
-        <section class="card">
-            <h2>2. Catalogue des Plantes</h2>
-            
-            <form id="form-plante" class="form-inline">
-                <h3>Ajouter une plante sur-mesure</h3>
-                <div class="form-row">
-                    <input type="text" id="p-nom" placeholder="Nom (ex: Courge)" required>
-                    <select id="p-categorie" required></select>
-                    <select id="p-soleil" required>
-                        <option value="SUD">Plein Soleil</option>
-                        <option value="MI_OMBRE">Mi-Ombre</option>
-                        <option value="OMBRE">Ombre</option>
-                    </select>
-                    <button type="submit" class="btn-secondary">Ajouter au catalogue</button>
-                </div>
-            </form>
+        <!-- SECTION 2 : CATALOGUE DES PLANTES -->
+<section class="card">
+    <h2>2. Catalogue des Plantes</h2>
+    <p><small>💡 <strong>Astuce :</strong> Cliquez sur une plante pour choisir un carré, ou <strong>glissez-déposez</strong> la carte directement dans une case de la grille d'un carré !</small></p>
+    
+    <form id="form-plante" class="form-inline">
+        <h3>Ajouter une plante sur-mesure</h3>
+        <div class="form-row">
+            <input type="text" id="p-nom" placeholder="Nom (ex: Courge)" required>
+            <select id="p-categorie" required></select>
+            <select id="p-soleil" required>
+                <option value="SUD">Plein Soleil</option>
+                <option value="MI_OMBRE">Mi-Ombre</option>
+                <option value="OMBRE">Ombre</option>
+            </select>
+            <button type="submit" class="btn-secondary">Ajouter au catalogue</button>
+        </div>
+    </form>
 
-            <div class="filter-group">
-                <label for="filter-categorie">Filtrer par catégorie :</label>
-                <select id="filter-categorie"></select>
-            </div>
+    <div class="filter-group">
+        <label for="filter-categorie">Filtrer par catégorie :</label>
+        <select id="filter-categorie"></select>
+    </div>
 
-            <div id="catalogue-plantes" class="grid-list"></div>
-        </section>
+    <div id="catalogue-plantes" class="grid-list"></div>
+</section>
+
 
         <section class="card">
             <h2>☀️ Météo Locale & Alertes Sanitaires</h2>
