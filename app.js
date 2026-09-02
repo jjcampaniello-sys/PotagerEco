@@ -140,8 +140,7 @@ let carres = [];
 let plantes = [...catalogueInitial];
 window.zoneClimatiqueActuelle = { nom: "Standard", decalageJours: 0, latitude: null, longitude: null };
 
-// Taille par défaut (en cm) attribuée à une case vide de la grille,
-// utilisée comme poids neutre tant qu'aucune plante n'y est installée.
+// Taille par défaut (en cm) attribuée à une case vide de la grille
 const TAILLE_CASE_PAR_DEFAUT_CM = 25;
 
 // =================================================================
@@ -179,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPlantes();
     renderCalendrier();
     afficherStatutZoneClimatique();
+    chargerMeteoEtAlertes(); // Chargement de la météo au lancement
 
     document.getElementById("form-carre")?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -195,9 +195,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const h = document.getElementById("hauteur").value;
         const expo = document.getElementById("exposition").value;
 
-        // La géolocalisation est déclenchée dès la création du carré : elle
-        // permet de déduire une zone climatique (décalage de récolte) sans
-        // action supplémentaire de l'utilisateur.
         const position = await detecterZoneClimatique();
 
         const nouveauCarre = new CarrePotager(
@@ -240,9 +237,6 @@ function initSelects() {
 // 2 bis. GÉOLOCALISATION ET ZONE CLIMATIQUE
 // =================================================================
 
-// Renvoie {latitude, longitude} via l'API du navigateur, ou null si
-// l'utilisateur refuse/l'API est indisponible (l'appli continue de
-// fonctionner sans zone climatique détectée dans ce cas).
 function detecterZoneClimatique() {
     return new Promise((resolve) => {
         if (!("geolocation" in navigator)) {
@@ -257,9 +251,6 @@ function detecterZoneClimatique() {
     });
 }
 
-// Convertit une latitude en décalage de jours par rapport à une
-// latitude de référence (France métropolitaine, ~46.6°N) : plus on
-// est au nord, plus les récoltes sont tardives, et inversement.
 function calculerDecalageDepuisLatitude(latitude) {
     const LATITUDE_REFERENCE = 46.6;
     const JOURS_PAR_DEGRE = 3;
@@ -294,17 +285,8 @@ function afficherStatutZoneClimatique() {
 }
 
 // =================================================================
-// 2 ter. GRILLE À CASES DE TAILLE VARIABLE (selon la plante posée)
+// 2 ter. GRILLE À CASES DE TAILLE VARIABLE
 // =================================================================
-//
-// La grille reste organisée en 3 colonnes x 3 lignes (9 cases), mais
-// la largeur de chaque colonne et la hauteur de chaque ligne
-// s'adaptent désormais à la plante la plus "encombrante" qu'elles
-// contiennent (distanceMin, en cm). Une case vide garde une taille
-// neutre (TAILLE_CASE_PAR_DEFAUT_CM). Cela évite de figer toutes les
-// cases sur un pas de 30 cm alors qu'une carotte (10 cm) ou un
-// œillet d'Inde (15 cm) tiennent dans bien moins de place qu'une
-// tomate (45 cm) ou une courgette (60 cm).
 
 function calculerPoidsGrille(carre) {
     const poidsColonnes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
@@ -324,9 +306,6 @@ function calculerPoidsGrille(carre) {
     return { poidsColonnes, poidsLignes };
 }
 
-// Distance réelle (cm) entre deux cases, calculée à partir des
-// tailles de colonnes/lignes réellement affichées pour ce carré,
-// plutôt que d'une taille de case fixe à 30 cm.
 function calculerDistanceEntreCases(carre, index1, index2) {
     const { poidsColonnes, poidsLignes } = calculerPoidsGrille(carre);
     const x1 = index1 % 3, y1 = Math.floor(index1 / 3);
@@ -394,7 +373,6 @@ function renderCarres() {
 function supprimerCarreComplet(carreId) {
     if (confirm(`Voulez-vous vraiment supprimer le carré potager #${carreId} ?`)) {
         carres = carres.filter(c => c.id !== carreId);
-        // Réindexation simple des IDs
         carres.forEach((c, index) => c.id = index + 1);
         sauvegarderDonnees();
         renderCarres();
@@ -557,18 +535,16 @@ function renderCalendrier() {
 
     const decalage = window.zoneClimatiqueActuelle.decalageJours;
     const dateCourante = new Date();
-    const moisCourant = dateCourante.getMonth(); // 0 = Janvier, 8 = Septembre
+    const moisCourant = dateCourante.getMonth();
 
     idsPlantesEnTerre.forEach(idPlante => {
         const infoPlante = plantes.find(p => p.id === idPlante);
         if (infoPlante) {
             let messageAlerteOuRecolte = "";
 
-            // Contrôle si la période actuelle est hors saison
             if (moisCourant < infoPlante.moisMiseEnTerre || moisCourant > infoPlante.moisMax) {
                 messageAlerteOuRecolte = `<span style="color:#c62828;">⚠️ <strong>Saison dépassée :</strong> La mise en terre s'effectue habituellement en <strong>${infoPlante.repiquage}</strong>.</span>`;
             } else {
-                // Calcul basé sur la période recommandée de plantation au printemps
                 const dateCalcul = new Date(dateCourante.getFullYear(), infoPlante.moisMiseEnTerre, 15);
                 dateCalcul.setDate(dateCalcul.getDate() + (infoPlante.joursMaturation || 60) + decalage);
 
@@ -585,4 +561,166 @@ function renderCalendrier() {
             `;
         }
     });
+}
+
+// =================================================================
+// 6. MÉTÉO ET ALERTES SANITAIRES DU POTAGER
+// =================================================================
+
+async function chargerMeteoEtAlertes() {
+    const statusDiv = document.getElementById("meteo-status");
+    const cardsDiv = document.getElementById("meteo-cards");
+
+    if (!statusDiv || !cardsDiv) return;
+
+    statusDiv.innerHTML = "⏳ Analyse météo complète & calcul des risques du potager...";
+    cardsDiv.innerHTML = "";
+
+    // Position par défaut (Paris)
+    let latitude = 48.8566; 
+    let longitude = 2.3522;
+
+    if ("geolocation" in navigator) {
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+        } catch (err) {
+            console.warn("Géolocalisation indisponible, position par défaut utilisée.", err);
+        }
+    }
+
+    // Récupération des données météo étendues (Températures, Précipitations, Vent)
+    const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`;
+
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+
+        const data = await response.json();
+        const daily = data.daily;
+
+        statusDiv.innerHTML = `📍 Zone localisée (Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)})`;
+
+        cardsDiv.innerHTML = daily.time.map((dateStr, index) => {
+            const tMax = daily.temperature_2m_max[index];
+            const tMin = daily.temperature_2m_min[index];
+            const pluie = daily.precipitation_sum[index];
+            const vent = daily.windspeed_10m_max ? daily.windspeed_10m_max[index] : 0;
+
+            // 1. RECOMMANDATIONS D'ARROSAGE
+            let consigneArrosage = "";
+            if (pluie >= 8) {
+                consigneArrosage = "💧 <strong>Arrosage inutile :</strong> Pluie suffisante pour combler les besoins du sol.";
+            } else if (tMax >= 30) {
+                consigneArrosage = "🚰 <strong>Arrosage intensif :</strong> Arrosez abondamment tôt le matin ou tard le soir. Maintenez le paillage humide.";
+            } else if (tMax >= 22 && pluie < 2) {
+                consigneArrosage = "🚰 <strong>Arrosage modéré :</strong> Maintenez une humidité constante au pied sans détremper les racines.";
+            } else {
+                consigneArrosage = "💧 <strong>Arrosage léger / réduit :</strong> Limitez l'apport pour éviter la stagnation d'eau au niveau des racines.";
+            }
+
+            // 2. DIAGNOSTICS SANITAIRES ET RISQUES ÉTENDUS
+            let alertesEtTraitements = [];
+
+            // Cul-noir / Nécrose apicale
+            if (tMax >= 27 && pluie < 2) {
+                alertesEtTraitements.push(
+                    "🍅 <strong>Risque Cul-Noir (Nécrose apicale) :</strong> Stress hydrique bloquant la fixation du calcium.<br>" +
+                    "👉 <em>Action :</em> Arrosez de façon très régulière (sans à-coups) et paillez le sol pour préserver une humidité constante."
+                );
+            }
+
+            // Mildiou
+            if (pluie > 4 && tMax >= 18 && tMax <= 26) {
+                alertesEtTraitements.push(
+                    "⚠️ <strong>Alerte Mildiou :</strong> Humidité et chaleur modérée favorisent les champignons.<br>" +
+                    "👉 <em>Action :</em> Pulvérisez du purin de prêle ou du bicarbonate. Ne mouillez jamais le feuillage."
+                );
+            }
+
+            // Oïdium
+            if (tMax >= 22 && tMax <= 30 && pluie < 3) {
+                alertesEtTraitements.push(
+                    "⚪ <strong>Risque Oïdium :</strong> Temps chaud et sec avec rosée ou variations de température nocturnes.<br>" +
+                    "👉 <em>Action :</em> Pulvérisez du lait dilué (10%) ou du bicarbonate de soude. Supprimez les premières feuilles atteintes."
+                );
+            }
+
+            // Pucerons & Ravageurs
+            if (tMax >= 25 && pluie < 1) {
+                alertesEtTraitements.push(
+                    "🪲 <strong>Prolifération de Ravageurs :</strong> Chaleur sèche propice aux pucerons et altises.<br>" +
+                    "👉 <em>Action :</em> Pulvérisez une solution de savon noir dilué (5%) ou utilisez un extrait fermenté de grande ortie."
+                );
+            }
+
+            // Limaces
+            if (pluie >= 5) {
+                alertesEtTraitements.push(
+                    "🐌 <strong>Alerte Limaces :</strong> L'humidité fait sortir les gastéropodes.<br>" +
+                    "👉 <em>Action :</em> Protégez les jeunes pousses avec du marc de café, des coquilles d'œufs pilées ou du paillis."
+                );
+            }
+
+            // Canicule
+            if (tMax >= 32) {
+                alertesEtTraitements.push(
+                    "🔥 <strong>Alerte Canicule :</strong> Risque de brûlure des feuillages et arrêt de croissance.<br>" +
+                    "👉 <em>Action :</em> Ombragez vos carrés avec un voile ou une ombrière. Ne coupez aucun feuillage."
+                );
+            }
+
+            // Gel
+            if (tMin <= 3) {
+                alertesEtTraitements.push(
+                    "❄️ <strong>Risque de Gelée :</strong> Danger pour les jeunes plants sensibles.<br>" +
+                    "👉 <em>Action :</em> Couvrez vos carrés d'un voile de forçage ou de cloches de protection avant la nuit."
+                );
+            }
+
+            // Vent fort
+            if (vent >= 40) {
+                alertesEtTraitements.push(
+                    "💨 <strong>Vent Fort (max " + vent + " km/h) :</strong> Risque de casse des tiges et déracinement.<br>" +
+                    "👉 <em>Action :</em> Vérifiez le tuteurage des tomates et légumineuses hautes."
+                );
+            }
+
+            // Diagnostic par défaut
+            if (alertesEtTraitements.length === 0) {
+                alertesEtTraitements.push(
+                    "🟢 <strong>Conditions Optimales :</strong> Climat favorable pour la pousse.<br>" +
+                    "👉 <em>Action :</em> Entretien classique. Un apport de purin d'ortie peut stimuler les défenses des plants."
+                );
+            }
+
+            // Couleur de bordure dynamique
+            let couleurBordure = '#2e7d32'; // Vert
+            if (tMin <= 3 || tMax >= 32 || (pluie > 4 && tMax >= 18 && tMax <= 26)) {
+                couleurBordure = '#c62828'; // Rouge
+            } else if (alertesEtTraitements.length > 1) {
+                couleurBordure = '#ef6c00'; // Orange
+            }
+
+            return `
+                <div class="item-card" style="border-left: 5px solid ${couleurBordure};">
+                    <h4>📅 ${new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</h4>
+                    <p>🌡️ <strong>Températures :</strong> ${tMin}°C à ${tMax}°C</p>
+                    <p>🌧️ <strong>Pluie :</strong> ${pluie} mm ${vent ? '| 💨 <strong>Vent :</strong> ' + vent + ' km/h' : ''}</p>
+                    <hr style="border:0; border-top:1px solid #e0e0e0; margin:8px 0;">
+                    <p style="font-size:12px; margin-bottom:8px;">${consigneArrosage}</p>
+                    <div style="font-size:12px; color:#333; display:flex; flex-direction:column; gap:8px;">
+                        ${alertesEtTraitements.join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error("Erreur météo :", error);
+        statusDiv.innerHTML = `<span style="color:#c62828;">❌ Impossible d'accéder aux prévisions météo.</span>`;
+    }
 }
