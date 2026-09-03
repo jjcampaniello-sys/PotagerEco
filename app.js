@@ -329,9 +329,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("filter-categorie")?.addEventListener("change", renderPlantes);
 });
 
-    document.getElementById("filter-categorie")?.addEventListener("change", renderPlantes);
-});
-
 function initSelects() {
     const selectFilter = document.getElementById("filter-categorie");
     const selectPCategorie = document.getElementById("p-categorie");
