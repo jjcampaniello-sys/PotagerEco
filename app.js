@@ -140,7 +140,7 @@ const catalogueInitial = [
         id: "souci", nom: "Souci (Calendula)", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
         semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 20,
         descriptionRole: "🛡️ Fleur comestible répulsive contre nématodes et pucerons, très mellifère."
-    }
+    },
     { id: "chou_kale", nom: "Chou Kale", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 65, distanceMin: 40, descriptionRole: "Feuille robuste résistante au froid." },
     { id: "blette", nom: "Blette", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Avril - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 55, distanceMin: 30, descriptionRole: "Récolte étalée sur plusieurs mois." },
     { id: "chou_fleur", nom: "Chou-fleur", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 100, distanceMin: 45, descriptionRole: "Gourmand, à isoler des autres brassicacées." },
@@ -444,7 +444,6 @@ function renderCarres() {
                     <button onclick="supprimerCarreComplet(${c.id})" style="background:#ffebee; color:#c62828; border:1px solid #ef9a9a; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px;">
                         🗑️ Supprimer le carré
                     </button>
-                    <button class="btn-alerte-case" onclick="event.stopPropagation(); afficherAlertesPlante('${item.idPlante}')" title="Alertes">⚠️</button>
                 </div>
                 ${infoLocalisation}
                 ${htmlGrille}
