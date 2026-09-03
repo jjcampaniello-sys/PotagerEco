@@ -868,8 +868,6 @@ function afficherAlertesPlante(planteId) {
     if (!plante || !daily) { alert("Chargez d'abord la météo (section 3)."); return; }
     const tMax = daily.temperature_2m_max[0], pluie = daily.precipitation_sum[0];
     let conseils = [];
-    if (plante.categorie === CATEGORIES.LEGUME_FRUIT && tMax >= 27 && pluie < 2)
-        conseils.push("🍅 Stress hydrique : risque de cul noir, arrosage régulier indispensable.");
     if (plante.categorie === CATEGORIES.LEGUME_FEUILLE && pluie >= 5)
         conseils.push("🐌 Feuillage tendre exposé aux limaces : paillis sec conseillé.");
     if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
