@@ -616,7 +616,11 @@ function analyserCompatibilite(planteId) {
     const [carreId, caseIndex] = select.value.split("-").map(Number);
     const carre = carres.find(c => c.id === carreId);
     const planteActuelle = plantes.find(p => p.id === planteId);
+   const HEURES_SOLEIL_PAR_EXPOSITION = { SUD: 8, "SUD-EST": 6, "SUD-OUEST": 6, EST: 5, OUEST: 5, NORD: 2 };
     let conseils = [];
+    const heuresDispo = HEURES_SOLEIL_PAR_EXPOSITION[carre.exposition] ?? 4;
+const heuresRequises = planteActuelle?.besoinSoleil === "SUD" ? 6 : 3;
+if (heuresDispo < heuresRequises) conseils.push(`<span style="color:#c62828;">☀️ ${planteActuelle.nom} a besoin d'~${heuresRequises}h de soleil/j, ce carré (${carre.exposition}) en reçoit ~${heuresDispo}h.</span>`);
 
     carre.grille.forEach((voisin, idxVoisin) => {
         if (voisin && idxVoisin !== caseIndex) {
