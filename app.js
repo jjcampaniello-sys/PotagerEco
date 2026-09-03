@@ -424,6 +424,7 @@ function renderCarres() {
                 htmlGrille += `
     <div class="case-grille plante-occupee" title="Espacement requis : ${plante?.distanceMin || "?"} cm">
         <button class="btn-info-case" onclick="event.stopPropagation(); afficherInfoPlante(${c.id}, ${i})" title="Infos">ℹ️</button>
+        <button class="btn-alerte-case" onclick="event.stopPropagation(); afficherAlertesPlante('${item.idPlante}')" title="Alertes">⚠️</button>
         🌿 <strong>${getNomPlante(item.idPlante)}</strong>
         <button class="btn-suppr-case" onclick="libererCase(${c.id}, ${i})">❌</button>
     </div>`;
