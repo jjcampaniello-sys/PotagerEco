@@ -141,6 +141,12 @@ const catalogueInitial = [
         semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 20,
         descriptionRole: "🛡️ Fleur comestible répulsive contre nématodes et pucerons, très mellifère."
     }
+    { id: "chou_kale", nom: "Chou Kale", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 65, distanceMin: 40, descriptionRole: "Feuille robuste résistante au froid." },
+    { id: "blette", nom: "Blette", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Avril - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 55, distanceMin: 30, descriptionRole: "Récolte étalée sur plusieurs mois." },
+    { id: "chou_fleur", nom: "Chou-fleur", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 100, distanceMin: 45, descriptionRole: "Gourmand, à isoler des autres brassicacées." },
+    { id: "feve", nom: "Fève", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Février - Avril", repiquage: "Semis direct", moisMiseEnTerre: 1, moisMax: 3, joursMaturation: 90, distanceMin: 20, descriptionRole: "Fixe l'azote, résiste au froid." },
+    { id: "ciboulette", nom: "Ciboulette", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE", semis: "Mars - Mai", repiquage: "Avril - Juin", moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 60, distanceMin: 15, descriptionRole: "🛡️ Éloigne pucerons, vivace facile." },
+    { id: "thym", nom: "Thym", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 20, descriptionRole: "Vivace méditerranéenne, peu d'arrosage." },
 ];
 
 const MATRICE_ASSOCIATIONS = {
@@ -370,7 +376,7 @@ function calculerPoidsGrille(carre) {
         const item = carre.grille[i];
         if (!item) continue;
         const plante = plantes.find(p => p.id === item.idPlante);
-        const taille = plante?.distanceMin || TAILLE_CASE_PAR_DEFAUT_CM;
+        const taille = (plante?.distanceMin || TAILLE_CASE_PAR_DEFAUT_CM) * 0.75;
         const col = i % 3;
         const ligne = Math.floor(i / 3);
         poidsColonnes[col] = Math.max(poidsColonnes[col], taille);
@@ -416,10 +422,11 @@ function renderCarres() {
             if (item) {
                 const plante = plantes.find(p => p.id === item.idPlante);
                 htmlGrille += `
-                    <div class="case-grille plante-occupee" title="Espacement requis : ${plante?.distanceMin || "?"} cm">
-                        🌿 <strong>${getNomPlante(item.idPlante)}</strong>
-                        <button class="btn-suppr-case" onclick="libererCase(${c.id}, ${i})">❌</button>
-                    </div>`;
+    <div class="case-grille plante-occupee" title="Espacement requis : ${plante?.distanceMin || "?"} cm">
+        <button class="btn-info-case" onclick="event.stopPropagation(); afficherInfoPlante(${c.id}, ${i})" title="Infos">ℹ️</button>
+        🌿 <strong>${getNomPlante(item.idPlante)}</strong>
+        <button class="btn-suppr-case" onclick="libererCase(${c.id}, ${i})">❌</button>
+    </div>`;
             } else {
                 htmlGrille += `<div class="case-grille"><small>Libre (${i+1})</small></div>`;
             }
@@ -437,6 +444,7 @@ function renderCarres() {
                     <button onclick="supprimerCarreComplet(${c.id})" style="background:#ffebee; color:#c62828; border:1px solid #ef9a9a; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px;">
                         🗑️ Supprimer le carré
                     </button>
+                    <button class="btn-alerte-case" onclick="event.stopPropagation(); afficherAlertesPlante('${item.idPlante}')" title="Alertes">⚠️</button>
                 </div>
                 ${infoLocalisation}
                 ${htmlGrille}
@@ -556,7 +564,8 @@ function analyserCompatibilite(planteId) {
             // Utiliser le max surestimait systématiquement l'espace nécessaire
             // dès qu'une grande plante (ex. tomate 45cm) côtoyait une petite
             // (ex. carotte 10cm).
-            const espacementRequis = Math.round(((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2);
+            const FACTEUR_INTENSIF = 0.75; // culture intensive en carré : -25% vs pleine terre
+const espacementRequis = Math.round((((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2) * FACTEUR_INTENSIF);
             if (dist < espacementRequis) {
                 alerteEspacement = ` <span style="color:#c62828;">⚠️ Trop proche (min. ${espacementRequis} cm)</span>`;
             }
@@ -591,7 +600,25 @@ function fermerAssistant() {
 function getNomPlante(id) {
     return plantes.find(p => p.id === id)?.nom || id;
 }
-
+function afficherInfoPlante(carreId, indexCase) {
+    const carre = carres.find(c => c.id === carreId);
+    const item = carre?.grille[indexCase];
+    const plante = plantes.find(p => p.id === item?.idPlante);
+    if (!plante) return;
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `
+        <div class="modal-box">
+            <h3>🌱 ${plante.nom}</h3>
+            <p><strong>Planté le :</strong> ${item.datePlantation}</p>
+            <p><strong>Semis :</strong> ${plante.semis}</p>
+            <p><strong>Repiquage :</strong> ${plante.repiquage}</p>
+            <p><strong>Maturation :</strong> ~${plante.joursMaturation} j</p>
+            <p><small>${plante.descriptionRole}</small></p>
+            <button onclick="this.closest('.modal-overlay').remove()">Fermer</button>
+        </div>`;
+    document.body.appendChild(overlay);
+}
 // =================================================================
 // 5. CALENDRIER DE RÉCOLTE AVEC DATES COHÉRENTES
 // =================================================================
@@ -679,7 +706,7 @@ async function chargerMeteoEtAlertes() {
 
         const data = await response.json();
         const daily = data.daily;
-
+window.dernieresDonneesMeteoJour = daily;
         statusDiv.innerHTML = `📍 Zone localisée (Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)})`;
 
         cardsDiv.innerHTML = daily.time.map((dateStr, index) => {
@@ -789,4 +816,25 @@ async function chargerMeteoEtAlertes() {
         console.error("Erreur météo :", error);
         statusDiv.innerHTML = `<span style="color:#c62828;">❌ Impossible d'accéder aux prévisions météo.</span>`;
     }
+}
+function afficherAlertesPlante(planteId) {
+    const plante = plantes.find(p => p.id === planteId);
+    const daily = window.dernieresDonneesMeteoJour;
+    if (!plante || !daily) { alert("Chargez d'abord la météo (section 3)."); return; }
+    const tMax = daily.temperature_2m_max[0], pluie = daily.precipitation_sum[0];
+    let conseils = [];
+    if (plante.categorie === CATEGORIES.LEGUME_FRUIT && tMax >= 27 && pluie < 2)
+        conseils.push("🍅 Stress hydrique : risque de cul noir, arrosage régulier indispensable.");
+    if (plante.categorie === CATEGORIES.LEGUME_FEUILLE && pluie >= 5)
+        conseils.push("🐌 Feuillage tendre exposé aux limaces : paillis sec conseillé.");
+    if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
+        conseils.push("🌿 Arrosage minimal suffisant, évitez l'excès.");
+    if (plante.categorie === CATEGORIES.LEGUMINEUSE && tMax >= 25 && pluie < 1)
+        conseils.push("🪲 Pucerons noirs sur jeunes pousses : surveillez le sommet des tiges.");
+    if (conseils.length === 0) conseils.push("🟢 Rien de spécifique aujourd'hui.");
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    overlay.innerHTML = `<div class="modal-box"><h3>⚠️ ${plante.nom}</h3><p>${conseils.join("</p><p>")}</p>
+        <button onclick="this.closest('.modal-overlay').remove()">Fermer</button></div>`;
+    document.body.appendChild(overlay);
 }
