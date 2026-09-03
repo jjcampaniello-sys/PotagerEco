@@ -882,6 +882,12 @@ function afficherAlertesPlante(planteId) {
     const tMax = daily.temperature_2m_max[0], pluie = daily.precipitation_sum[0];
     const humidite = daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[0] : null;
     let conseils = [];
+    // Mildiou : absent jusqu'ici de cette fonction alors qu'il est calculé
+    // dans la carte météo du jour (chargerMeteoEtAlertes) — d'où l'écart
+    // observé. Même règle réappliquée ici, par plante sensible.
+    if (["tomate", "poivron", "courgettes", "concombre"].includes(plante.id) &&
+        (pluie > 4 || (humidite !== null && humidite >= 80)) && tMax >= 18 && tMax <= 26)
+        conseils.push("⚠️ Risque Mildiou : humidité" + (humidite !== null ? ` (${humidite}%)` : "") + " et température favorables au champignon.");
     if (plante.categorie === CATEGORIES.LEGUME_FEUILLE && (pluie >= 5 || (humidite !== null && humidite >= 85)))
         conseils.push("🐌 Feuillage tendre exposé aux limaces : paillis sec conseillé.");
     if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
