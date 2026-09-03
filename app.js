@@ -1,4 +1,4 @@
-=========================================
+// =================================================================
 // 1. CLASSES ET STRUCTURATION DES DONNÉES
 // =================================================================
 
@@ -90,6 +90,56 @@ const catalogueInitial = [
         id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
         semis: "Mars - Mai", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 45, distanceMin: 30,
         descriptionRole: "🐝 Fleur mellifère attirant les insectes pollinisateurs."
+    },
+    { 
+        id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
+        semis: "Mars - Septembre", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 8, joursMaturation: 25, distanceMin: 5,
+        descriptionRole: "Culture ultra-rapide, idéale pour marquer les rangs et optimiser l'espace en attendant les légumes plus lents."
+    },
+    { 
+        id: "oignon", nom: "Oignon", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
+        semis: "Février - Avril", repiquage: "Avril - Mai", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 120, distanceMin: 10,
+        descriptionRole: "🛡️ Son odeur brouille le repérage olfactif de la mouche de la carotte, protection réciproque classique."
+    },
+    { 
+        id: "betterave", nom: "Betterave", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
+        semis: "Avril - Juin", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 90, distanceMin: 15,
+        descriptionRole: "Racine peu exigeante qui valorise bien les cases de petite taille."
+    },
+    { 
+        id: "epinard", nom: "Épinard", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", 
+        semis: "Mars - Septembre", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 8, joursMaturation: 40, distanceMin: 15,
+        descriptionRole: "Feuille rustique appréciant la mi-ombre des légumes plus hauts."
+    },
+    { 
+        id: "poivron", nom: "Poivron", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
+        semis: "Février - Mars", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 40,
+        descriptionRole: "Comme la tomate, apprécie la présence du basilic à proximité."
+    },
+    { 
+        id: "concombre", nom: "Concombre", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
+        semis: "Avril - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 65, distanceMin: 40,
+        descriptionRole: "Bénéficie lui aussi des pollinisateurs attirés par la bourrache."
+    },
+    { 
+        id: "petit_pois", nom: "Petit Pois", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", 
+        semis: "Février - Avril", repiquage: "Semis direct", moisMiseEnTerre: 1, moisMax: 3, joursMaturation: 70, distanceMin: 8,
+        descriptionRole: "Comme le haricot, fixe l'azote de l'air et enrichit le sol pour ses voisins."
+    },
+    { 
+        id: "persil", nom: "Persil", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE", 
+        semis: "Mars - Juin", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 70, distanceMin: 15,
+        descriptionRole: "Attire des insectes auxiliaires utiles et se glisse facilement en bordure de case."
+    },
+    { 
+        id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
+        semis: "Avril - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 25,
+        descriptionRole: "🛡️ Plante-piège : attire les pucerons sur elle plutôt que sur les légumes voisins."
+    },
+    { 
+        id: "souci", nom: "Souci (Calendula)", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
+        semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 20,
+        descriptionRole: "🛡️ Fleur comestible répulsive contre nématodes et pucerons, très mellifère."
     }
 ];
 
@@ -131,7 +181,31 @@ const MATRICE_ASSOCIATIONS = {
     },
     bourrache: {
         courgettes: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Plante mellifère majeure augmentant le rendement des courgettes." },
-        tomate: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Attire les pollinisateurs et repousse le sphinx de la tomate." }
+        tomate: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Attire les pollinisateurs et repousse le sphinx de la tomate." },
+        concombre: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Améliore la pollinisation des fleurs de concombre." }
+    },
+    oignon: {
+        carotte: { type: "PROTECTION_SANITAIRE", distance: "10-15 cm", conseil: "🛡️ Association réciproque classique : l'oignon brouille la mouche de la carotte, et inversement la carotte perturbe la mouche de l'oignon." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "10-15 cm", conseil: "🤝 L'oignon pousse en hauteur pendant que la laitue occupe le sol en surface." }
+    },
+    radis: {
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "5-10 cm", conseil: "🤝 Le radis, récolté en 3-4 semaines, marque le rang et libère vite la place pour la carotte plus lente." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "10-15 cm", conseil: "🤝 Deux cultures rapides qui optimisent l'espace en attendant les légumes plus longs." }
+    },
+    capucine: {
+        courgettes: { type: "PROTECTION_SANITAIRE", distance: "25-30 cm", conseil: "🛡️ Plante-piège : concentre les pucerons loin des courgettes." },
+        concombre: { type: "PROTECTION_SANITAIRE", distance: "25-30 cm", conseil: "🛡️ Détourne les pucerons et attire des auxiliaires pollinisateurs." }
+    },
+    souci: {
+        tomate: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ Répulsif reconnu contre les nématodes du sol, en complément de l'œillet d'Inde." },
+        carotte: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ Aide à limiter la pression des nématodes autour des racines." }
+    },
+    petit_pois: {
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "8-12 cm", conseil: "🌿 Comme le haricot, fixe l'azote de l'air et profite à la carotte voisine." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "8-12 cm", conseil: "🥬 La laitue profite de l'ombre légère et de l'azote apporté par les petits pois." }
+    },
+    persil: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Association traditionnelle : le persil profite de l'ombrage léger de la tomate et attire des insectes auxiliaires." }
     }
 };
 
@@ -476,7 +550,13 @@ function analyserCompatibilite(planteId) {
             const regle = MATRICE_ASSOCIATIONS[planteId]?.[voisin.idPlante] || MATRICE_ASSOCIATIONS[voisin.idPlante]?.[planteId];
 
             let alerteEspacement = "";
-            const espacementRequis = Math.max(planteActuelle?.distanceMin || 0, planteVoisine?.distanceMin || 0);
+            // Distance optimale = moyenne des deux besoins d'espace (et non le
+            // maximum) : chaque plante n'a besoin que de la moitié de son
+            // distanceMin autour d'elle-même, donc centre-à-centre = (a+b)/2.
+            // Utiliser le max surestimait systématiquement l'espace nécessaire
+            // dès qu'une grande plante (ex. tomate 45cm) côtoyait une petite
+            // (ex. carotte 10cm).
+            const espacementRequis = Math.round(((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2);
             if (dist < espacementRequis) {
                 alerteEspacement = ` <span style="color:#c62828;">⚠️ Trop proche (min. ${espacementRequis} cm)</span>`;
             }
@@ -576,7 +656,6 @@ async function chargerMeteoEtAlertes() {
     statusDiv.innerHTML = "⏳ Analyse météo complète & calcul des risques du potager...";
     cardsDiv.innerHTML = "";
 
-    // Position par défaut (Paris)
     let latitude = 48.8566; 
     let longitude = 2.3522;
 
@@ -592,7 +671,6 @@ async function chargerMeteoEtAlertes() {
         }
     }
 
-    // Récupération des données météo étendues (Températures, Précipitations, Vent)
     const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`;
 
     try {
@@ -610,7 +688,6 @@ async function chargerMeteoEtAlertes() {
             const pluie = daily.precipitation_sum[index];
             const vent = daily.windspeed_10m_max ? daily.windspeed_10m_max[index] : 0;
 
-            // 1. RECOMMANDATIONS D'ARROSAGE
             let consigneArrosage = "";
             if (pluie >= 8) {
                 consigneArrosage = "💧 <strong>Arrosage inutile :</strong> Pluie suffisante pour combler les besoins du sol.";
@@ -622,10 +699,8 @@ async function chargerMeteoEtAlertes() {
                 consigneArrosage = "💧 <strong>Arrosage léger / réduit :</strong> Limitez l'apport pour éviter la stagnation d'eau au niveau des racines.";
             }
 
-            // 2. DIAGNOSTICS SANITAIRES ET RISQUES ÉTENDUS
             let alertesEtTraitements = [];
 
-            // Cul-noir / Nécrose apicale
             if (tMax >= 27 && pluie < 2) {
                 alertesEtTraitements.push(
                     "🍅 <strong>Risque Cul-Noir (Nécrose apicale) :</strong> Stress hydrique bloquant la fixation du calcium.<br>" +
@@ -633,7 +708,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Mildiou
             if (pluie > 4 && tMax >= 18 && tMax <= 26) {
                 alertesEtTraitements.push(
                     "⚠️ <strong>Alerte Mildiou :</strong> Humidité et chaleur modérée favorisent les champignons.<br>" +
@@ -641,7 +715,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Oïdium
             if (tMax >= 22 && tMax <= 30 && pluie < 3) {
                 alertesEtTraitements.push(
                     "⚪ <strong>Risque Oïdium :</strong> Temps chaud et sec avec rosée ou variations de température nocturnes.<br>" +
@@ -649,7 +722,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Pucerons & Ravageurs
             if (tMax >= 25 && pluie < 1) {
                 alertesEtTraitements.push(
                     "🪲 <strong>Prolifération de Ravageurs :</strong> Chaleur sèche propice aux pucerons et altises.<br>" +
@@ -657,7 +729,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Limaces
             if (pluie >= 5) {
                 alertesEtTraitements.push(
                     "🐌 <strong>Alerte Limaces :</strong> L'humidité fait sortir les gastéropodes.<br>" +
@@ -665,7 +736,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Canicule
             if (tMax >= 32) {
                 alertesEtTraitements.push(
                     "🔥 <strong>Alerte Canicule :</strong> Risque de brûlure des feuillages et arrêt de croissance.<br>" +
@@ -673,7 +743,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Gel
             if (tMin <= 3) {
                 alertesEtTraitements.push(
                     "❄️ <strong>Risque de Gelée :</strong> Danger pour les jeunes plants sensibles.<br>" +
@@ -681,7 +750,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Vent fort
             if (vent >= 40) {
                 alertesEtTraitements.push(
                     "💨 <strong>Vent Fort (max " + vent + " km/h) :</strong> Risque de casse des tiges et déracinement.<br>" +
@@ -689,7 +757,6 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Diagnostic par défaut
             if (alertesEtTraitements.length === 0) {
                 alertesEtTraitements.push(
                     "🟢 <strong>Conditions Optimales :</strong> Climat favorable pour la pousse.<br>" +
@@ -697,12 +764,11 @@ async function chargerMeteoEtAlertes() {
                 );
             }
 
-            // Couleur de bordure dynamique
-            let couleurBordure = '#2e7d32'; // Vert
+            let couleurBordure = '#2e7d32';
             if (tMin <= 3 || tMax >= 32 || (pluie > 4 && tMax >= 18 && tMax <= 26)) {
-                couleurBordure = '#c62828'; // Rouge
+                couleurBordure = '#c62828';
             } else if (alertesEtTraitements.length > 1) {
-                couleurBordure = '#ef6c00'; // Orange
+                couleurBordure = '#ef6c00';
             }
 
             return `
