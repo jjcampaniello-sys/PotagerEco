@@ -301,16 +301,54 @@ document.addEventListener("DOMContentLoaded", () => {
         e.target.reset();
     });
 
+    document.getElementById("form-plante")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const nom = document.getElementById("p-nom").value.trim();
+        const categorie = document.getElementById("p-categorie").value;
+        const besoinSoleil = document.getElementById("p-soleil").value;
+        const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_");
+
+        if (plantes.some(p => p.id === id)) {
+            alert("Cette plante existe déjà dans le catalogue.");
+            return;
+        }
+
+        plantes.push({
+            id, nom, categorie, besoinSoleil,
+            semis: "À préciser", repiquage: "À préciser",
+            moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 30,
+            descriptionRole: "Plante ajoutée manuellement au catalogue."
+        });
+
+        sauvegarderDonnees();
+        renderPlantes();
+        e.target.reset();
+    });
+
+    document.getElementById("filter-categorie")?.addEventListener("change", renderPlantes);
+});
+
     document.getElementById("filter-categorie")?.addEventListener("change", renderPlantes);
 });
 
 function initSelects() {
     const selectFilter = document.getElementById("filter-categorie");
-    if (!selectFilter) return;
-    selectFilter.innerHTML = `<option value="TOUS">-- Toutes les catégories --</option>`;
-    Object.values(CATEGORIES).forEach(cat => {
-        selectFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
+    const selectPCategorie = document.getElementById("p-categorie");
+
+    if (selectFilter) {
+        selectFilter.innerHTML = `<option value="TOUS">-- Toutes les catégories --</option>`;
+        Object.values(CATEGORIES).forEach(cat => {
+            selectFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
+
+    if (selectPCategorie) {
+        selectPCategorie.innerHTML = "";
+        Object.values(CATEGORIES).forEach(cat => {
+            selectPCategorie.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
 }
 
 // =================================================================
