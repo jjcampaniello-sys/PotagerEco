@@ -133,7 +133,18 @@ button {
     padding: 6px;
     transition: background 0.2s, border-color 0.2s;
 }
+.case-grille { position: relative; }
+.btn-info-case, .btn-alerte-case {
+    position: absolute; top: 2px; background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px;
+}
+.btn-info-case { left: 2px; }
+.btn-alerte-case { right: 2px; }
 
+.modal-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1000;
+}
+.modal-box { background:white; padding:20px; border-radius:8px; max-width:400px; width:90%; }
 .case-grille:hover {
     background: #f1f8e9;
 }
