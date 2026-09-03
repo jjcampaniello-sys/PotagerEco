@@ -222,6 +222,11 @@ window.zoneClimatiqueActuelle = { nom: "Standard", decalageJours: 0, latitude: n
 
 // Taille par défaut (en cm) attribuée à une case vide de la grille
 const TAILLE_CASE_PAR_DEFAUT_CM = 25;
+// Facteur unique de compression "culture intensive en carré" (-25% vs pleine
+// terre), réutilisé partout où un espacement de plante est affiché ou
+// vérifié, pour que la grille, l'infobulle et l'assistant d'association
+// racontent toujours le même chiffre.
+const FACTEUR_INTENSIF_CARRE = 0.75;
 
 // =================================================================
 // 2. STOCKAGE ET INITIALISATION
@@ -238,7 +243,16 @@ function chargerDonneesStockees() {
     const plantesStockees = localStorage.getItem("potager_plantes_v10");
     const zoneStockee = localStorage.getItem("potager_zone_climatique_v10");
 
-    if (plantesStockees) plantes = JSON.parse(plantesStockees);
+    if (plantesStockees) {
+        const plantesSauvegardees = JSON.parse(plantesStockees);
+        const idsSauvegardes = new Set(plantesSauvegardees.map(p => p.id));
+        // Fusion : on garde les plantes du stock (y compris ajouts manuels)
+        // et on rajoute les plantes du catalogue de base absentes du stock,
+        // sinon toute nouvelle plante ajoutée au code restait invisible dès
+        // qu'un navigateur avait déjà une sauvegarde locale.
+        const nouvellesDuCatalogue = catalogueInitial.filter(p => !idsSauvegardes.has(p.id));
+        plantes = [...plantesSauvegardees, ...nouvellesDuCatalogue];
+    }
     if (zoneStockee) window.zoneClimatiqueActuelle = JSON.parse(zoneStockee);
 
     if (carresStockes) {
@@ -319,10 +333,24 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // Valeurs par défaut déduites de la catégorie plutôt que fixes pour
+        // toutes les plantes ajoutées à la main (une racine n'a pas les
+        // mêmes besoins qu'un fruit) — l'utilisateur peut toujours corriger
+        // ensuite depuis la fiche plante.
+        const DEFAUTS_PAR_CATEGORIE = {
+            [CATEGORIES.LEGUME_FRUIT]:   { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 70, distanceMin: 40 },
+            [CATEGORIES.LEGUME_FEUILLE]: { moisMiseEnTerre: 3, moisMax: 6, joursMaturation: 45, distanceMin: 25 },
+            [CATEGORIES.LEGUME_RACINE]:  { moisMiseEnTerre: 2, moisMax: 6, joursMaturation: 80, distanceMin: 12 },
+            [CATEGORIES.LEGUMINEUSE]:    { moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 65, distanceMin: 15 },
+            [CATEGORIES.AROMATIQUE]:     { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 18 },
+            [CATEGORIES.FLEUR_AMIE]:     { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 22 }
+        };
+        const defauts = DEFAUTS_PAR_CATEGORIE[categorie] || { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 30 };
+
         plantes.push({
             id, nom, categorie, besoinSoleil,
             semis, repiquage,
-            moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 30,
+            ...defauts,
             descriptionRole: "Plante ajoutée manuellement au catalogue.",
             plantesAssociees: associees
         });
@@ -417,7 +445,7 @@ function calculerPoidsGrille(carre) {
         const item = carre.grille[i];
         if (!item) continue;
         const plante = plantes.find(p => p.id === item.idPlante);
-        const taille = (plante?.distanceMin || TAILLE_CASE_PAR_DEFAUT_CM) * 0.75;
+        const taille = (plante?.distanceMin || TAILLE_CASE_PAR_DEFAUT_CM) * FACTEUR_INTENSIF_CARRE;
         const col = i % 3;
         const ligne = Math.floor(i / 3);
         poidsColonnes[col] = Math.max(poidsColonnes[col], taille);
@@ -463,7 +491,7 @@ function renderCarres() {
             if (item) {
                 const plante = plantes.find(p => p.id === item.idPlante);
                 htmlGrille += `
-    <div class="case-grille plante-occupee" title="Espacement requis : ${plante?.distanceMin || "?"} cm">
+    <div class="case-grille plante-occupee" title="Espacement optimal (carré) : ${plante ? Math.round(plante.distanceMin * FACTEUR_INTENSIF_CARRE) : "?"} cm">
         <button class="btn-info-case" onclick="event.stopPropagation(); afficherInfoPlante(${c.id}, ${i})" title="Infos">ℹ️</button>
         <button class="btn-alerte-case" onclick="event.stopPropagation(); afficherAlertesPlante('${item.idPlante}')" title="Alertes">⚠️</button>
         🌿 <strong>${getNomPlante(item.idPlante)}</strong>
@@ -596,11 +624,22 @@ function analyserCompatibilite(planteId) {
             const dist = calculerDistanceEntreCases(carre, caseIndex, idxVoisin);
             const planteVoisine = plantes.find(p => p.id === voisin.idPlante);
 
-            const regle = MATRICE_ASSOCIATIONS[planteId]?.[voisin.idPlante] || MATRICE_ASSOCIATIONS[voisin.idPlante]?.[planteId];
+            let regle = MATRICE_ASSOCIATIONS[planteId]?.[voisin.idPlante] || MATRICE_ASSOCIATIONS[voisin.idPlante]?.[planteId];
+
+            // Associations saisies manuellement via le formulaire d'ajout de
+            // plante (champ plantesAssociees) : jusqu'ici renseignées et
+            // affichées dans la fiche plante, mais jamais utilisées ici.
+            if (!regle) {
+                const associeeManuelle =
+                    (planteActuelle?.plantesAssociees || []).includes(voisin.idPlante) ||
+                    (planteVoisine?.plantesAssociees || []).includes(planteId);
+                if (associeeManuelle) {
+                    regle = { type: "COMPAGNONNAGE_DIRECT", distance: "selon espacement optimal", conseil: "🤝 Association déclarée manuellement lors de l'ajout de la plante." };
+                }
+            }
 
             let alerteEspacement = "";
-            const FACTEUR_INTENSIF = 0.75; // culture intensive en carré : -25% vs pleine terre
-            const espacementRequis = Math.round((((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2) * FACTEUR_INTENSIF);
+            const espacementRequis = Math.round((((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2) * FACTEUR_INTENSIF_CARRE);
             if (dist < espacementRequis) {
                 alerteEspacement = ` <span style="color:#c62828;">⚠️ Trop proche (min. ${espacementRequis} cm)</span>`;
             }
@@ -713,6 +752,75 @@ function renderCalendrier() {
 // 6. MÉTÉO ET ALERTES SANITAIRES DU POTAGER
 // =================================================================
 
+// Source unique des règles d'alerte météo/sanitaires : utilisée à la fois
+// par la carte météo du jour (chargerMeteoEtAlertes) et par le détail par
+// plante (afficherAlertesPlante), pour éviter que les deux divergent comme
+// c'était le cas pour le mildiou.
+function evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent) {
+    const alertes = [];
+
+    if (tMax >= 27 && pluie < 2) {
+        alertes.push({ id: "cul_noir", html:
+            "🍅 <strong>Risque Cul-Noir (Nécrose apicale) :</strong> Stress hydrique bloquant la fixation du calcium.<br>" +
+            "👉 <em>Action :</em> Arrosez de façon très régulière (sans à-coups) et paillez le sol pour préserver une humidité constante."
+        });
+    }
+
+    // Mildiou : déclenché par la pluie OU une hygrométrie élevée.
+    if ((pluie > 4 || (humidite !== null && humidite >= 80)) && tMax >= 18 && tMax <= 26) {
+        alertes.push({ id: "mildiou", html:
+            "⚠️ <strong>Alerte Mildiou :</strong> Humidité" + (humidite !== null ? ` (${humidite}%)` : "") + " et chaleur modérée favorisent les champignons.<br>" +
+            "👉 <em>Action :</em> Pulvérisez du purin de prêle ou du bicarbonate. Ne mouillez jamais le feuillage."
+        });
+    }
+
+    // Oïdium : temps chaud avec air relativement sec en journée.
+    if (tMax >= 22 && tMax <= 30 && pluie < 3 && (humidite === null || humidite <= 70)) {
+        alertes.push({ id: "oidium", html:
+            "⚪ <strong>Risque Oïdium :</strong> Temps chaud et air sec en journée avec rosée ou variations de température nocturnes.<br>" +
+            "👉 <em>Action :</em> Pulvérisez du lait dilué (10%) ou du bicarbonate de soude. Supprimez les premières feuilles atteintes."
+        });
+    }
+
+    if (tMax >= 25 && pluie < 1) {
+        alertes.push({ id: "ravageurs", html:
+            "🪲 <strong>Prolifération de Ravageurs :</strong> Chaleur sèche propice aux pucerons et altises.<br>" +
+            "👉 <em>Action :</em> Pulvérisez une solution de savon noir dilué (5%) ou utilisez un extrait fermenté de grande ortie."
+        });
+    }
+
+    // Limaces : pluie fraîche OU humidité ambiante élevée sans pluie.
+    if (pluie >= 5 || (humidite !== null && humidite >= 85)) {
+        alertes.push({ id: "limaces", html:
+            "🐌 <strong>Alerte Limaces :</strong> L'humidité fait sortir les gastéropodes.<br>" +
+            "👉 <em>Action :</em> Protégez les jeunes pousses avec du marc de café, des coquilles d'œufs pilées ou du paillis."
+        });
+    }
+
+    if (tMax >= 32) {
+        alertes.push({ id: "canicule", html:
+            "🔥 <strong>Alerte Canicule :</strong> Risque de brûlure des feuillages et arrêt de croissance.<br>" +
+            "👉 <em>Action :</em> Ombragez vos carrés avec un voile ou une ombrière. Ne coupez aucun feuillage."
+        });
+    }
+
+    if (tMin <= 3) {
+        alertes.push({ id: "gelee", html:
+            "❄️ <strong>Risque de Gelée :</strong> Danger pour les jeunes plants sensibles.<br>" +
+            "👉 <em>Action :</em> Couvrez vos carrés d'un voile de forçage ou de cloches de protection avant la nuit."
+        });
+    }
+
+    if (vent >= 40) {
+        alertes.push({ id: "vent", html:
+            "💨 <strong>Vent Fort (max " + vent + " km/h) :</strong> Risque de casse des tiges et déracinement.<br>" +
+            "👉 <em>Action :</em> Vérifiez le tuteurage des tomates et légumineuses hautes."
+        });
+    }
+
+    return alertes;
+}
+
 async function chargerMeteoEtAlertes() {
     const statusDiv = document.getElementById("meteo-status");
     const cardsDiv = document.getElementById("meteo-cards");
@@ -779,68 +887,7 @@ window.dernieresDonneesMeteoJour = daily;
                 consigneArrosage = "💧 <strong>Arrosage léger / réduit :</strong> Limitez l'apport pour éviter la stagnation d'eau au niveau des racines.";
             }
 
-            let alertesEtTraitements = [];
-
-            if (tMax >= 27 && pluie < 2) {
-                alertesEtTraitements.push(
-                    "🍅 <strong>Risque Cul-Noir (Nécrose apicale) :</strong> Stress hydrique bloquant la fixation du calcium.<br>" +
-                    "👉 <em>Action :</em> Arrosez de façon très régulière (sans à-coups) et paillez le sol pour préserver une humidité constante."
-                );
-            }
-
-            // Mildiou : déclenché par la pluie OU une hygrométrie élevée
-            // (l'humidité de l'air favorise le champignon même sans pluie).
-            if ((pluie > 4 || (humidite !== null && humidite >= 80)) && tMax >= 18 && tMax <= 26) {
-                alertesEtTraitements.push(
-                    "⚠️ <strong>Alerte Mildiou :</strong> Humidité" + (humidite !== null ? ` (${humidite}%)` : "") + " et chaleur modérée favorisent les champignons.<br>" +
-                    "👉 <em>Action :</em> Pulvérisez du purin de prêle ou du bicarbonate. Ne mouillez jamais le feuillage."
-                );
-            }
-
-            // Oïdium : temps chaud avec air relativement sec en journée
-            // (l'humidité affine le déclenchement au lieu de se baser sur la pluie seule).
-            if (tMax >= 22 && tMax <= 30 && pluie < 3 && (humidite === null || humidite <= 70)) {
-                alertesEtTraitements.push(
-                    "⚪ <strong>Risque Oïdium :</strong> Temps chaud et air sec en journée avec rosée ou variations de température nocturnes.<br>" +
-                    "👉 <em>Action :</em> Pulvérisez du lait dilué (10%) ou du bicarbonate de soude. Supprimez les premières feuilles atteintes."
-                );
-            }
-
-            if (tMax >= 25 && pluie < 1) {
-                alertesEtTraitements.push(
-                    "🪲 <strong>Prolifération de Ravageurs :</strong> Chaleur sèche propice aux pucerons et altises.<br>" +
-                    "👉 <em>Action :</em> Pulvérisez une solution de savon noir dilué (5%) ou utilisez un extrait fermenté de grande ortie."
-                );
-            }
-
-            // Limaces : pluie fraîche OU humidité ambiante élevée sans pluie
-            if (pluie >= 5 || (humidite !== null && humidite >= 85)) {
-                alertesEtTraitements.push(
-                    "🐌 <strong>Alerte Limaces :</strong> L'humidité fait sortir les gastéropodes.<br>" +
-                    "👉 <em>Action :</em> Protégez les jeunes pousses avec du marc de café, des coquilles d'œufs pilées ou du paillis."
-                );
-            }
-
-            if (tMax >= 32) {
-                alertesEtTraitements.push(
-                    "🔥 <strong>Alerte Canicule :</strong> Risque de brûlure des feuillages et arrêt de croissance.<br>" +
-                    "👉 <em>Action :</em> Ombragez vos carrés avec un voile ou une ombrière. Ne coupez aucun feuillage."
-                );
-            }
-
-            if (tMin <= 3) {
-                alertesEtTraitements.push(
-                    "❄️ <strong>Risque de Gelée :</strong> Danger pour les jeunes plants sensibles.<br>" +
-                    "👉 <em>Action :</em> Couvrez vos carrés d'un voile de forçage ou de cloches de protection avant la nuit."
-                );
-            }
-
-            if (vent >= 40) {
-                alertesEtTraitements.push(
-                    "💨 <strong>Vent Fort (max " + vent + " km/h) :</strong> Risque de casse des tiges et déracinement.<br>" +
-                    "👉 <em>Action :</em> Vérifiez le tuteurage des tomates et légumineuses hautes."
-                );
-            }
+            let alertesEtTraitements = evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent).map(a => a.html);
 
             if (alertesEtTraitements.length === 0) {
                 alertesEtTraitements.push(
@@ -879,23 +926,21 @@ function afficherAlertesPlante(planteId) {
     const plante = plantes.find(p => p.id === planteId);
     const daily = window.dernieresDonneesMeteoJour;
     if (!plante || !daily) { alert("Chargez d'abord la météo (section 3)."); return; }
-    const tMax = daily.temperature_2m_max[0], pluie = daily.precipitation_sum[0];
+    const tMax = daily.temperature_2m_max[0], tMin = daily.temperature_2m_min[0], pluie = daily.precipitation_sum[0];
+    const vent = daily.windspeed_10m_max ? daily.windspeed_10m_max[0] : 0;
     const humidite = daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[0] : null;
-    let conseils = [];
-    // Mildiou : absent jusqu'ici de cette fonction alors qu'il est calculé
-    // dans la carte météo du jour (chargerMeteoEtAlertes) — d'où l'écart
-    // observé. Même règle réappliquée ici, par plante sensible.
-    if (["tomate", "poivron", "courgettes", "concombre"].includes(plante.id) &&
-        (pluie > 4 || (humidite !== null && humidite >= 80)) && tMax >= 18 && tMax <= 26)
-        conseils.push("⚠️ Risque Mildiou : humidité" + (humidite !== null ? ` (${humidite}%)` : "") + " et température favorables au champignon.");
-    if (plante.categorie === CATEGORIES.LEGUME_FEUILLE && (pluie >= 5 || (humidite !== null && humidite >= 85)))
-        conseils.push("🐌 Feuillage tendre exposé aux limaces : paillis sec conseillé.");
+
+    const PLANTES_SENSIBLES_CHAMPIGNONS = ["tomate", "poivron", "courgettes", "concombre"];
+    let conseils = evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent)
+        .filter(a => {
+            if (a.id === "mildiou" || a.id === "oidium" || a.id === "cul_noir") return PLANTES_SENSIBLES_CHAMPIGNONS.includes(plante.id);
+            if (a.id === "limaces") return plante.categorie === CATEGORIES.LEGUME_FEUILLE;
+            return true; // ravageurs, canicule, gelée, vent : pertinents pour toute plante
+        })
+        .map(a => a.html);
+
     if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
         conseils.push("🌿 Arrosage minimal suffisant, évitez l'excès.");
-    if ((plante.id === "tomate" || plante.id === "poivron") && tMax >= 27 && pluie < 2)
-        conseils.push("🍅 Stress hydrique : risque de cul noir, arrosage régulier indispensable.");
-    if ((plante.id === "courgettes" || plante.id === "concombre") && tMax >= 27 && pluie < 2)
-        conseils.push("🥒 Stress hydrique : baisse de production et fruits amers, arrosage régulier indispensable.");
     if (conseils.length === 0) conseils.push("🟢 Rien de spécifique aujourd'hui.");
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
