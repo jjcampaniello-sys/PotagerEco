@@ -599,14 +599,8 @@ function analyserCompatibilite(planteId) {
             const regle = MATRICE_ASSOCIATIONS[planteId]?.[voisin.idPlante] || MATRICE_ASSOCIATIONS[voisin.idPlante]?.[planteId];
 
             let alerteEspacement = "";
-            // Distance optimale = moyenne des deux besoins d'espace (et non le
-            // maximum) : chaque plante n'a besoin que de la moitié de son
-            // distanceMin autour d'elle-même, donc centre-à-centre = (a+b)/2.
-            // Utiliser le max surestimait systématiquement l'espace nécessaire
-            // dès qu'une grande plante (ex. tomate 45cm) côtoyait une petite
-            // (ex. carotte 10cm).
             const FACTEUR_INTENSIF = 0.75; // culture intensive en carré : -25% vs pleine terre
-const espacementRequis = Math.round((((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2) * FACTEUR_INTENSIF);
+            const espacementRequis = Math.round((((planteActuelle?.distanceMin || 0) + (planteVoisine?.distanceMin || 0)) / 2) * FACTEUR_INTENSIF);
             if (dist < espacementRequis) {
                 alerteEspacement = ` <span style="color:#c62828;">⚠️ Trop proche (min. ${espacementRequis} cm)</span>`;
             }
@@ -743,7 +737,7 @@ async function chargerMeteoEtAlertes() {
         }
     }
 
-    const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`;
+    const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,relative_humidity_2m_mean&forecast_days=3&timezone=auto`;
 
     try {
         const response = await fetch(apiUrl);
@@ -754,11 +748,25 @@ async function chargerMeteoEtAlertes() {
 window.dernieresDonneesMeteoJour = daily;
         statusDiv.innerHTML = `📍 Zone localisée (Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)})`;
 
-        cardsDiv.innerHTML = daily.time.map((dateStr, index) => {
+        // Tendance moyenne sur les 3 jours, affichée en complément des cartes
+        // quotidiennes (utile pour une vue d'ensemble, mais les alertes
+        // restent calculées jour par jour : une gelée le jour 3 ne doit pas
+        // être "diluée" par deux jours doux dans une moyenne).
+        const moyenne = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const humiditeMoy = daily.relative_humidity_2m_mean ? Math.round(moyenne(daily.relative_humidity_2m_mean)) : null;
+        const carteTendance = `
+            <div class="item-card" style="border-left: 5px solid #1565c0; background:#f0f6ff;">
+                <h4>📊 Tendance sur 3 jours</h4>
+                <p>🌡️ Moy. min/max : ${moyenne(daily.temperature_2m_min).toFixed(1)}°C / ${moyenne(daily.temperature_2m_max).toFixed(1)}°C</p>
+                <p>🌧️ Cumul pluie : ${daily.precipitation_sum.reduce((a, b) => a + b, 0).toFixed(1)} mm ${humiditeMoy !== null ? `| 💦 Humidité moy. : ${humiditeMoy}%` : ""}</p>
+            </div>`;
+
+        cardsDiv.innerHTML = carteTendance + daily.time.map((dateStr, index) => {
             const tMax = daily.temperature_2m_max[index];
             const tMin = daily.temperature_2m_min[index];
             const pluie = daily.precipitation_sum[index];
             const vent = daily.windspeed_10m_max ? daily.windspeed_10m_max[index] : 0;
+            const humidite = daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[index] : null;
 
             let consigneArrosage = "";
             if (pluie >= 8) {
@@ -780,16 +788,20 @@ window.dernieresDonneesMeteoJour = daily;
                 );
             }
 
-            if (pluie > 4 && tMax >= 18 && tMax <= 26) {
+            // Mildiou : déclenché par la pluie OU une hygrométrie élevée
+            // (l'humidité de l'air favorise le champignon même sans pluie).
+            if ((pluie > 4 || (humidite !== null && humidite >= 80)) && tMax >= 18 && tMax <= 26) {
                 alertesEtTraitements.push(
-                    "⚠️ <strong>Alerte Mildiou :</strong> Humidité et chaleur modérée favorisent les champignons.<br>" +
+                    "⚠️ <strong>Alerte Mildiou :</strong> Humidité" + (humidite !== null ? ` (${humidite}%)` : "") + " et chaleur modérée favorisent les champignons.<br>" +
                     "👉 <em>Action :</em> Pulvérisez du purin de prêle ou du bicarbonate. Ne mouillez jamais le feuillage."
                 );
             }
 
-            if (tMax >= 22 && tMax <= 30 && pluie < 3) {
+            // Oïdium : temps chaud avec air relativement sec en journée
+            // (l'humidité affine le déclenchement au lieu de se baser sur la pluie seule).
+            if (tMax >= 22 && tMax <= 30 && pluie < 3 && (humidite === null || humidite <= 70)) {
                 alertesEtTraitements.push(
-                    "⚪ <strong>Risque Oïdium :</strong> Temps chaud et sec avec rosée ou variations de température nocturnes.<br>" +
+                    "⚪ <strong>Risque Oïdium :</strong> Temps chaud et air sec en journée avec rosée ou variations de température nocturnes.<br>" +
                     "👉 <em>Action :</em> Pulvérisez du lait dilué (10%) ou du bicarbonate de soude. Supprimez les premières feuilles atteintes."
                 );
             }
@@ -801,7 +813,8 @@ window.dernieresDonneesMeteoJour = daily;
                 );
             }
 
-            if (pluie >= 5) {
+            // Limaces : pluie fraîche OU humidité ambiante élevée sans pluie
+            if (pluie >= 5 || (humidite !== null && humidite >= 85)) {
                 alertesEtTraitements.push(
                     "🐌 <strong>Alerte Limaces :</strong> L'humidité fait sortir les gastéropodes.<br>" +
                     "👉 <em>Action :</em> Protégez les jeunes pousses avec du marc de café, des coquilles d'œufs pilées ou du paillis."
@@ -847,7 +860,7 @@ window.dernieresDonneesMeteoJour = daily;
                 <div class="item-card" style="border-left: 5px solid ${couleurBordure};">
                     <h4>📅 ${new Date(dateStr).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</h4>
                     <p>🌡️ <strong>Températures :</strong> ${tMin}°C à ${tMax}°C</p>
-                    <p>🌧️ <strong>Pluie :</strong> ${pluie} mm ${vent ? '| 💨 <strong>Vent :</strong> ' + vent + ' km/h' : ''}</p>
+                    <p>🌧️ <strong>Pluie :</strong> ${pluie} mm ${humidite !== null ? `| 💦 <strong>Humidité :</strong> ${humidite}%` : ""} ${vent ? '| 💨 <strong>Vent :</strong> ' + vent + ' km/h' : ''}</p>
                     <hr style="border:0; border-top:1px solid #e0e0e0; margin:8px 0;">
                     <p style="font-size:12px; margin-bottom:8px;">${consigneArrosage}</p>
                     <div style="font-size:12px; color:#333; display:flex; flex-direction:column; gap:8px;">
@@ -867,8 +880,9 @@ function afficherAlertesPlante(planteId) {
     const daily = window.dernieresDonneesMeteoJour;
     if (!plante || !daily) { alert("Chargez d'abord la météo (section 3)."); return; }
     const tMax = daily.temperature_2m_max[0], pluie = daily.precipitation_sum[0];
+    const humidite = daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[0] : null;
     let conseils = [];
-    if (plante.categorie === CATEGORIES.LEGUME_FEUILLE && pluie >= 5)
+    if (plante.categorie === CATEGORIES.LEGUME_FEUILLE && (pluie >= 5 || (humidite !== null && humidite >= 85)))
         conseils.push("🐌 Feuillage tendre exposé aux limaces : paillis sec conseillé.");
     if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
         conseils.push("🌿 Arrosage minimal suffisant, évitez l'excès.");
