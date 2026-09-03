@@ -874,8 +874,10 @@ function afficherAlertesPlante(planteId) {
         conseils.push("🐌 Feuillage tendre exposé aux limaces : paillis sec conseillé.");
     if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
         conseils.push("🌿 Arrosage minimal suffisant, évitez l'excès.");
-    if (plante.categorie === CATEGORIES.LEGUMINEUSE && tMax >= 25 && pluie < 1)
-        conseils.push("🪲 Pucerons noirs sur jeunes pousses : surveillez le sommet des tiges.");
+    if (["tomate", "poivron"].includes(plante.id) && tMax >= 27 && pluie < 2)
+        conseils.push("🍅 Stress hydrique : risque de cul noir, arrosage régulier indispensable.");
+    if (["courgettes", "concombre"].includes(plante.id) && tMax >= 27 && pluie < 2)
+        conseils.push("🥒 Stress hydrique : baisse de production et fruits amers, arrosage régulier indispensable.");
     if (conseils.length === 0) conseils.push("🟢 Rien de spécifique aujourd'hui.");
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
