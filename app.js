@@ -307,6 +307,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const nom = document.getElementById("p-nom").value.trim();
         const categorie = document.getElementById("p-categorie").value;
         const besoinSoleil = document.getElementById("p-soleil").value;
+        const semis = document.getElementById("p-semis").value.trim() || "À préciser";
+        const repiquage = document.getElementById("p-repiquage").value.trim() || "À préciser";
+        const associees = document.getElementById("p-associees").value.trim()
+            .split(",").map(s => s.trim()).filter(Boolean);
+        const id = nom.toLowerCase()...
         const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_");
 
         if (plantes.some(p => p.id === id)) {
@@ -316,9 +321,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         plantes.push({
             id, nom, categorie, besoinSoleil,
-            semis: "À préciser", repiquage: "À préciser",
+            semis, repiquage,
             moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 30,
-            descriptionRole: "Plante ajoutée manuellement au catalogue."
+            descriptionRole: "Plante ajoutée manuellement au catalogue.",
+            plantesAssociees: associees
         });
 
         sauvegarderDonnees();
@@ -650,6 +656,7 @@ function afficherInfoPlante(carreId, indexCase) {
             <p><strong>Repiquage :</strong> ${plante.repiquage}</p>
             <p><strong>Maturation :</strong> ~${plante.joursMaturation} j</p>
             <p><small>${plante.descriptionRole}</small></p>
+            <p><strong>Associées :</strong> ${(plante.plantesAssociees||[]).map(getNomPlante).join(", ") || "Aucune définie"}</p>
             <button onclick="this.closest('.modal-overlay').remove()">Fermer</button>
         </div>`;
     document.body.appendChild(overlay);
@@ -683,9 +690,12 @@ function renderCalendrier() {
         const infoPlante = plantes.find(p => p.id === idPlante);
         if (infoPlante) {
             let messageAlerteOuRecolte = "";
+            const decalageMois = Math.round(decalage / 30);
+            const moisMinAjuste = infoPlante.moisMiseEnTerre + decalageMois;
+            const moisMaxAjuste = infoPlante.moisMax + decalageMois;
 
-            if (moisCourant < infoPlante.moisMiseEnTerre || moisCourant > infoPlante.moisMax) {
-                messageAlerteOuRecolte = `<span style="color:#c62828;">⚠️ <strong>Saison dépassée :</strong> La mise en terre s'effectue habituellement en <strong>${infoPlante.repiquage}</strong>.</span>`;
+            if (moisCourant < moisMinAjuste || moisCourant > moisMaxAjuste) {
+                messageAlerteOuRecolte = `<span style="color:#c62828;">⚠️ <strong>Saison dépassée :</strong> La mise en terre s'effectue habituellement en <strong>${infoPlante.repiquage}</strong> (ajusté à votre climat).</span>`;
             } else {
                 const dateCalcul = new Date(dateCourante.getFullYear(), infoPlante.moisMiseEnTerre, 15);
                 dateCalcul.setDate(dateCalcul.getDate() + (infoPlante.joursMaturation || 60) + decalage);
