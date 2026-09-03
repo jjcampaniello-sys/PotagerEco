@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const repiquage = document.getElementById("p-repiquage").value.trim() || "À préciser";
         const associees = document.getElementById("p-associees").value.trim()
             .split(",").map(s => s.trim()).filter(Boolean);
-        const id = nom.toLowerCase()...
+  
         const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_");
 
         if (plantes.some(p => p.id === id)) {
