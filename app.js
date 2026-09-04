@@ -438,8 +438,10 @@ function afficherStatutZoneClimatique() {
 // =================================================================
 
 function calculerPoidsGrille(carre) {
-    const poidsColonnes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
-    const poidsLignes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
+    const baseCol = carre.longueur / 3;
+const baseLigne = carre.largeur / 3;
+const poidsColonnes = [baseCol, baseCol, baseCol];
+const poidsLignes = [baseLigne, baseLigne, baseLigne];
 
     for (let i = 0; i < 9; i++) {
         const item = carre.grille[i];
@@ -556,6 +558,7 @@ function renderPlantes() {
                 <p><strong>Catégorie :</strong> ${p.categorie}</p>
                 <p><strong>Espacement requis :</strong> ${p.distanceMin} cm</p>
                 <p><small>${p.descriptionRole}</small></p>
+                ${p.vulnerabilites?.length ? `<p><small>⚠️ Sensible à : ${p.vulnerabilites.join(", ")}</small></p>` : ""}
                 <button class="btn-primary" onclick="ouvrirAssistantPlantation('${p.id}')">⚡ Planter & Associer</button>
             </div>`;
     });
@@ -693,6 +696,7 @@ function afficherInfoPlante(carreId, indexCase) {
             <p><strong>Repiquage :</strong> ${plante.repiquage}</p>
             <p><strong>Maturation :</strong> ~${plante.joursMaturation} j</p>
             <p><small>${plante.descriptionRole}</small></p>
+            <p><strong>Vulnérabilités :</strong> ${plante.vulnerabilites?.length ? plante.vulnerabilites.join(", ") : "Aucune renseignée"}</p>
             <p><strong>Associées :</strong> ${(plante.plantesAssociees||[]).map(getNomPlante).join(", ") || "Aucune définie"}</p>
             <button onclick="this.closest('.modal-overlay').remove()">Fermer</button>
         </div>`;
@@ -708,11 +712,11 @@ function renderCalendrier() {
     container.innerHTML = "";
 
     const idsPlantesEnTerre = new Set();
-    carres.forEach(c => {
-        c.grille.forEach(caseItem => {
-            if (caseItem) idsPlantesEnTerre.add(caseItem.idPlante);
-        });
+carres.forEach(c => {
+    c.grille.forEach(caseItem => {
+        if (caseItem) idsPlantesEnTerre.add(caseItem.idPlante);
     });
+});
 
     if (idsPlantesEnTerre.size === 0) {
         container.innerHTML = "<p style='color:#666;'>Aucune plante dans le potager.</p>";
@@ -723,33 +727,25 @@ function renderCalendrier() {
     const dateCourante = new Date();
     const moisCourant = dateCourante.getMonth();
 
-    idsPlantesEnTerre.forEach(idPlante => {
-        const infoPlante = plantes.find(p => p.id === idPlante);
-        if (infoPlante) {
-            let messageAlerteOuRecolte = "";
-            const decalageMois = Math.round(decalage / 30);
-            const moisMinAjuste = infoPlante.moisMiseEnTerre + decalageMois;
-            const moisMaxAjuste = infoPlante.moisMax + decalageMois;
+    plantationsReelles.forEach(caseItem => {
+    const infoPlante = plantes.find(p => p.id === caseItem.idPlante);
+    if (infoPlante) {
+        const datePlantee = new Date(caseItem.datePlantation);
+        const dateRecolte = new Date(datePlantee);
+        dateRecolte.setDate(dateRecolte.getDate() + (infoPlante.joursMaturation || 60) + decalage);
 
-            if (moisCourant < moisMinAjuste || moisCourant > moisMaxAjuste) {
-                messageAlerteOuRecolte = `<span style="color:#c62828;">⚠️ <strong>Saison dépassée :</strong> La mise en terre s'effectue habituellement en <strong>${infoPlante.repiquage}</strong> (ajusté à votre climat).</span>`;
-            } else {
-                const dateCalcul = new Date(dateCourante.getFullYear(), infoPlante.moisMiseEnTerre, 15);
-                dateCalcul.setDate(dateCalcul.getDate() + (infoPlante.joursMaturation || 60) + decalage);
+        const messageAlerteOuRecolte = `<span style="color:#2e7d32;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolte.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} (planté le ${datePlantee.toLocaleDateString('fr-FR')})</span>`;
 
-                messageAlerteOuRecolte = `<span style="color:#2e7d32;"><strong>🌾 Récolte estimée (si planté en ${infoPlante.repiquage}) :</strong> ~${dateCalcul.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</span>`;
-            }
-
-            container.innerHTML += `
-                <div class="item-card">
-                    <h4>🌱 ${infoPlante.nom}</h4>
-                    <p><strong>Période de semis :</strong> ${infoPlante.semis}</p>
-                    <p><strong>Période de repiquage :</strong> ${infoPlante.repiquage}</p>
-                    <p>${messageAlerteOuRecolte}</p>
-                </div>
-            `;
-        }
-    });
+        container.innerHTML += `
+            <div class="item-card">
+                <h4>🌱 ${infoPlante.nom}</h4>
+                <p><strong>Période de semis :</strong> ${infoPlante.semis}</p>
+                <p><strong>Période de repiquage :</strong> ${infoPlante.repiquage}</p>
+                <p>${messageAlerteOuRecolte}</p>
+            </div>
+        `;
+    }
+});
 }
 
 // =================================================================
