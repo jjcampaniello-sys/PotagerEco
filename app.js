@@ -9,7 +9,6 @@ class CarrePotager {
         this.largeur = Number(largeur);
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
-        this.grille = Array(9).fill(null);
         const ratio = this.longueur / this.largeur;
 this.nbColonnes = Math.min(5, Math.max(2, Math.round(3 * Math.sqrt(ratio))));
 this.nbLignes = Math.min(5, Math.max(2, Math.round(3 / Math.sqrt(ratio))));
@@ -22,7 +21,7 @@ this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
     getVolumeLitres() { return (this.longueur * this.largeur * this.hauteur) / 1000; }
 
     placerPlanteCase(indexCase, idPlante) {
-        if (indexCase >= 0 && indexCase < 9) {
+        if (indexCase >= 0 && indexCase < this.grille.length) {
             this.grille[indexCase] = {
                 idPlante: idPlante,
                 datePlantation: new Date().toISOString().split('T')[0]
@@ -31,7 +30,7 @@ this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
     }
 
     retirerPlanteCase(indexCase) {
-        if (indexCase >= 0 && indexCase < 9) {
+        if (indexCase >= 0 && indexCase < this.grille.length) {
             this.grille[indexCase] = null;
         }
     }
