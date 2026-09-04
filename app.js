@@ -10,6 +10,10 @@ class CarrePotager {
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
         this.grille = Array(9).fill(null);
+        const ratio = this.longueur / this.largeur;
+this.nbColonnes = Math.min(5, Math.max(2, Math.round(3 * Math.sqrt(ratio))));
+this.nbLignes = Math.min(5, Math.max(2, Math.round(3 / Math.sqrt(ratio))));
+this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -251,7 +255,10 @@ function chargerDonneesStockees() {
         // sinon toute nouvelle plante ajoutée au code restait invisible dès
         // qu'un navigateur avait déjà une sauvegarde locale.
         const nouvellesDuCatalogue = catalogueInitial.filter(p => !idsSauvegardes.has(p.id));
-        plantes = [...plantesSauvegardees, ...nouvellesDuCatalogue];
+        plantes = plantesSauvegardees.map(p => {
+    const ref = catalogueInitial.find(c => c.id === p.id);
+    return ref ? { ...ref, ...p } : p;
+}).concat(nouvellesDuCatalogue);
     }
     if (zoneStockee) window.zoneClimatiqueActuelle = JSON.parse(zoneStockee);
 
@@ -259,7 +266,9 @@ function chargerDonneesStockees() {
         const donneesBrutes = JSON.parse(carresStockes);
         carres = donneesBrutes.map(c => {
             const carre = new CarrePotager(c.id, c.longueur, c.largeur, c.hauteur, c.exposition, c.latitude, c.longitude);
-            carre.grille = c.grille || Array(9).fill(null);
+            carre.grille = c.grille || Array((c.nbColonnes || 3) * (c.nbLignes || 3)).fill(null);
+carre.nbColonnes = c.nbColonnes || 3;
+carre.nbLignes = c.nbLignes || 3;
             return carre;
         });
     }
@@ -440,16 +449,13 @@ function afficherStatutZoneClimatique() {
 function calculerPoidsGrille(carre) {
     const baseCol = carre.longueur / 3;
 const baseLigne = carre.largeur / 3;
-const poidsColonnes = [baseCol, baseCol, baseCol];
-const poidsLignes = [baseLigne, baseLigne, baseLigne];
+const poidsColonnes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
+const poidsLignes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
 
-    for (let i = 0; i < 9; i++) {
-        const item = carre.grille[i];
-        if (!item) continue;
-        const plante = plantes.find(p => p.id === item.idPlante);
-        const taille = (plante?.distanceMin || TAILLE_CASE_PAR_DEFAUT_CM) * FACTEUR_INTENSIF_CARRE;
-        const col = i % 3;
-        const ligne = Math.floor(i / 3);
+for (let i = 0; i < 9; i++) {
+    ...
+    const col = i % 3;
+    const ligne = Math.floor(i / 3);
         poidsColonnes[col] = Math.max(poidsColonnes[col], taille);
         poidsLignes[ligne] = Math.max(poidsLignes[ligne], taille);
     }
@@ -459,9 +465,8 @@ const poidsLignes = [baseLigne, baseLigne, baseLigne];
 
 function calculerDistanceEntreCases(carre, index1, index2) {
     const { poidsColonnes, poidsLignes } = calculerPoidsGrille(carre);
-    const x1 = index1 % 3, y1 = Math.floor(index1 / 3);
-    const x2 = index2 % 3, y2 = Math.floor(index2 / 3);
-
+    const x1 = index1 % carre.nbColonnes, y1 = Math.floor(index1 / carre.nbColonnes);
+const x2 = index2 % carre.nbColonnes, y2 = Math.floor(index2 / carre.nbColonnes);
     let dx = 0;
     for (let c = Math.min(x1, x2); c < Math.max(x1, x2); c++) {
         dx += (poidsColonnes[c] + poidsColonnes[c + 1]) / 2;
@@ -488,7 +493,7 @@ function renderCarres() {
         const styleGrille = `grid-template-columns: ${poidsColonnes.map(p => `${p}fr`).join(" ")}; grid-template-rows: ${poidsLignes.map(p => `${p}fr`).join(" ")};`;
 
         let htmlGrille = `<div class="grille-potager" style="${styleGrille}">`;
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < c.grille.length; i++) {
             const item = c.grille[i];
             if (item) {
                 const plante = plantes.find(p => p.id === item.idPlante);
@@ -643,6 +648,11 @@ if (heuresDispo < heuresRequises) conseils.push(`<span style="color:#c62828;">�
                 if (associeeManuelle) {
                     regle = { type: "COMPAGNONNAGE_DIRECT", distance: "selon espacement optimal", conseil: "🤝 Association déclarée manuellement lors de l'ajout de la plante." };
                 }
+                if (!regle && planteActuelle?.categorie === planteVoisine?.categorie &&
+    (planteActuelle?.vulnerabilites || []).some(v => (planteVoisine?.vulnerabilites || []).includes(v))) {
+    const communes = planteActuelle.vulnerabilites.filter(v => planteVoisine.vulnerabilites.includes(v));
+    regle = { type: "INCOMPATIBILITE", distance: "éloigner davantage", conseil: `⚠️ Même famille et vulnérabilités communes (${communes.join(", ")}) : risque de propagation, augmentez l'espacement.` };
+}
             }
 
             let alerteEspacement = "";
