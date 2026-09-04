@@ -446,15 +446,18 @@ function afficherStatutZoneClimatique() {
 // =================================================================
 
 function calculerPoidsGrille(carre) {
-    const baseCol = carre.longueur / 3;
-const baseLigne = carre.largeur / 3;
-const poidsColonnes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
-const poidsLignes = [TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM, TAILLE_CASE_PAR_DEFAUT_CM];
+    const baseCol = carre.longueur / carre.nbColonnes;
+    const baseLigne = carre.largeur / carre.nbLignes;
+    const poidsColonnes = Array(carre.nbColonnes).fill(baseCol);
+    const poidsLignes = Array(carre.nbLignes).fill(baseLigne);
 
-for (let i = 0; i < 9; i++) {
-    ...
-    const col = i % 3;
-    const ligne = Math.floor(i / 3);
+    for (let i = 0; i < carre.grille.length; i++) {
+        const item = carre.grille[i];
+        if (!item) continue;
+        const plante = plantes.find(p => p.id === item.idPlante);
+        const taille = (plante?.distanceMin || TAILLE_CASE_PAR_DEFAUT_CM) * FACTEUR_INTENSIF_CARRE;
+        const col = i % carre.nbColonnes;
+        const ligne = Math.floor(i / carre.nbColonnes);
         poidsColonnes[col] = Math.max(poidsColonnes[col], taille);
         poidsLignes[ligne] = Math.max(poidsLignes[ligne], taille);
     }
@@ -720,21 +723,19 @@ function renderCalendrier() {
     if (!container) return;
     container.innerHTML = "";
 
-    const idsPlantesEnTerre = new Set();
-carres.forEach(c => {
-    c.grille.forEach(caseItem => {
-        if (caseItem) idsPlantesEnTerre.add(caseItem.idPlante);
+    const plantationsReelles = [];
+    carres.forEach(c => {
+        c.grille.forEach(caseItem => {
+            if (caseItem) plantationsReelles.push(caseItem);
+        });
     });
-});
 
-    if (idsPlantesEnTerre.size === 0) {
+    if (plantationsReelles.length === 0) {
         container.innerHTML = "<p style='color:#666;'>Aucune plante dans le potager.</p>";
         return;
     }
 
     const decalage = window.zoneClimatiqueActuelle.decalageJours;
-    const dateCourante = new Date();
-    const moisCourant = dateCourante.getMonth();
 
     plantationsReelles.forEach(caseItem => {
     const infoPlante = plantes.find(p => p.id === caseItem.idPlante);
