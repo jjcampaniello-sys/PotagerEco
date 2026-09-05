@@ -646,6 +646,17 @@ function afficherInfoPlante(carreId, indexCase) {
             <p><small>${plante.descriptionRole}</small></p>
             <p><strong>Vulnérabilités :</strong> ${plante.vulnerabilites?.length ? plante.vulnerabilites.join(", ") : "Aucune renseignée"}</p>
             <p><strong>Associées :</strong> ${(plante.plantesAssociees||[]).map(getNomPlante).join(", ") || "Aucune définie"}</p>
+            <hr>
+            <h4>➕ Ajouter une association</h4>
+            <select id="assoc-autre-plante">${plantes.filter(x=>x.id!==plante.id).map(x=>`<option value="${x.id}">${x.nom}</option>`).join("")}</select>
+            <select id="assoc-type"><option value="PROTECTION_SANITAIRE">🛡️ Protection</option><option value="POLLINISATION">🐝 Pollinisation</option><option value="COMPAGNONNAGE_DIRECT">🤝 Compagnonnage</option><option value="INCOMPATIBILITE">⚠️ Incompatibilité</option></select>
+            <input type="text" id="assoc-distance" placeholder="Distance idéale (ex: 20-25 cm)">
+            <input type="text" id="assoc-conseil" placeholder="Conseil">
+            <button onclick="ajouterAssociationManuelle('${plante.id}')">Enregistrer</button>
+            <button onclick="this.closest('.modal-overlay').remove()">Fermer</button>
+        </div>`;
+    document.body.appendChild(overlay);
+}
             <button onclick="this.closest('.modal-overlay').remove()">Fermer</button>
         </div>`;
     document.body.appendChild(overlay);
