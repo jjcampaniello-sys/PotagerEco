@@ -1,4 +1,4 @@
-const CACHE_NAME = "potager-cache-v1";
+const CACHE_NAME = "potager-cache-v2";
 const FICHIERS_A_METTRE_EN_CACHE = [
     "./index.html",
     "./style.css",
