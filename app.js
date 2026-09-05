@@ -54,102 +54,30 @@ const REGLES_DISTANCES = {
 
 // Catalogue complet des plantes avec mois de plantation (0 = Janvier, 4 = Mai, etc.)
 const catalogueInitial = [
-    { 
-        id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
-        semis: "Mars - Avril", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 75, distanceMin: 45,
-        descriptionRole: "Bénéficie du basilic (stimulation/saveur) et de l'œillet d'Inde (protection)."
-    },
-    { 
-        id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
-        semis: "Avril - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 60,
-        descriptionRole: "Nécessite la présence de pollinisateurs attirés par la bourrache."
-    },
-    { 
-        id: "haricot_vert", nom: "Haricot Vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", 
-        semis: "Avril - Juillet", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 60, distanceMin: 20,
-        descriptionRole: "Fixe l'azote dans le sol pour stimuler les plantes voisines."
-    },
-    { 
-        id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", 
-        semis: "Mars - Septembre", repiquage: "Avril - Octobre", moisMiseEnTerre: 3, moisMax: 8, joursMaturation: 45, distanceMin: 25,
-        descriptionRole: "Culture rapide s'épanouissant à l'ombre des grands légumes."
-    },
-    { 
-        id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
-        semis: "Mars - Juillet", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 6, joursMaturation: 80, distanceMin: 10,
-        descriptionRole: "Sensible à la mouche de la carotte."
-    },
-    { 
-        id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", 
-        semis: "Avril - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 30, distanceMin: 20,
-        descriptionRole: "Stimule la croissance de la tomate et éloigne le mildiou."
-    },
-    { 
-        id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
-        semis: "Mars - Avril", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 50, distanceMin: 15,
-        descriptionRole: "🛡️ Fleur protectrice contre les pucerons et nématodes."
-    },
-    { 
-        id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
-        semis: "Mars - Mai", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 45, distanceMin: 30,
-        descriptionRole: "🐝 Fleur mellifère attirant les insectes pollinisateurs."
-    },
-    { 
-        id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
-        semis: "Mars - Septembre", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 8, joursMaturation: 25, distanceMin: 5,
-        descriptionRole: "Culture ultra-rapide, idéale pour marquer les rangs et optimiser l'espace en attendant les légumes plus lents."
-    },
-    { 
-        id: "oignon", nom: "Oignon", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
-        semis: "Février - Avril", repiquage: "Avril - Mai", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 120, distanceMin: 10,
-        descriptionRole: "🛡️ Son odeur brouille le repérage olfactif de la mouche de la carotte, protection réciproque classique."
-    },
-    { 
-        id: "betterave", nom: "Betterave", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", 
-        semis: "Avril - Juin", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 90, distanceMin: 15,
-        descriptionRole: "Racine peu exigeante qui valorise bien les cases de petite taille."
-    },
-    { 
-        id: "epinard", nom: "Épinard", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", 
-        semis: "Mars - Septembre", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 8, joursMaturation: 40, distanceMin: 15,
-        descriptionRole: "Feuille rustique appréciant la mi-ombre des légumes plus hauts."
-    },
-    { 
-        id: "poivron", nom: "Poivron", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
-        semis: "Février - Mars", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 40,
-        descriptionRole: "Comme la tomate, apprécie la présence du basilic à proximité."
-    },
-    { 
-        id: "concombre", nom: "Concombre", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", 
-        semis: "Avril - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 65, distanceMin: 40,
-        descriptionRole: "Bénéficie lui aussi des pollinisateurs attirés par la bourrache."
-    },
-    { 
-        id: "petit_pois", nom: "Petit Pois", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", 
-        semis: "Février - Avril", repiquage: "Semis direct", moisMiseEnTerre: 1, moisMax: 3, joursMaturation: 70, distanceMin: 8,
-        descriptionRole: "Comme le haricot, fixe l'azote de l'air et enrichit le sol pour ses voisins."
-    },
-    { 
-        id: "persil", nom: "Persil", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE", 
-        semis: "Mars - Juin", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 70, distanceMin: 15,
-        descriptionRole: "Attire des insectes auxiliaires utiles et se glisse facilement en bordure de case."
-    },
-    { 
-        id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
-        semis: "Avril - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 25,
-        descriptionRole: "🛡️ Plante-piège : attire les pucerons sur elle plutôt que sur les légumes voisins."
-    },
-    { 
-        id: "souci", nom: "Souci (Calendula)", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", 
-        semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 20,
-        descriptionRole: "🛡️ Fleur comestible répulsive contre nématodes et pucerons, très mellifère."
-    },
-    { id: "chou_kale", nom: "Chou Kale", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 65, distanceMin: 40, descriptionRole: "Feuille robuste résistante au froid." },
-    { id: "blette", nom: "Blette", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Avril - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 55, distanceMin: 30, descriptionRole: "Récolte étalée sur plusieurs mois." },
-    { id: "chou_fleur", nom: "Chou-fleur", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 100, distanceMin: 45, descriptionRole: "Gourmand, à isoler des autres brassicacées." },
-    { id: "feve", nom: "Fève", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Février - Avril", repiquage: "Semis direct", moisMiseEnTerre: 1, moisMax: 3, joursMaturation: 90, distanceMin: 20, descriptionRole: "Fixe l'azote, résiste au froid." },
-    { id: "ciboulette", nom: "Ciboulette", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE", semis: "Mars - Mai", repiquage: "Avril - Juin", moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 60, distanceMin: 15, descriptionRole: "🛡️ Éloigne pucerons, vivace facile." },
-    { id: "thym", nom: "Thym", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 20, descriptionRole: "Vivace méditerranéenne, peu d'arrosage." },
+    { id: "tomate", nom: "Tomate", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 75, distanceMin: 45, descriptionRole: "Bénéficie du basilic (stimulation/saveur) et de l'œillet d'Inde (protection).", vulnerabilites: ["mildiou", "oïdium", "cul noir"], plantesAssociees: ["basilic", "oeillet_inde", "haricot_vert", "carotte"] },
+    { id: "courgettes", nom: "Courgette", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 60, descriptionRole: "Nécessite la présence de pollinisateurs attirés par la bourrache.", vulnerabilites: ["oïdium", "pucerons"], plantesAssociees: ["bourrache", "haricot_vert", "oeillet_inde"] },
+    { id: "haricot_vert", nom: "Haricot Vert", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", semis: "Avril - Juillet", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 60, distanceMin: 20, descriptionRole: "Fixe l'azote dans le sol pour stimuler les plantes voisines.", vulnerabilites: ["pucerons"], plantesAssociees: ["tomate", "courgettes", "carotte", "laitue"] },
+    { id: "laitue", nom: "Laitue", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Avril - Octobre", moisMiseEnTerre: 3, moisMax: 8, joursMaturation: 45, distanceMin: 25, descriptionRole: "Culture rapide s'épanouissant à l'ombre des grands légumes.", vulnerabilites: ["limaces", "mildiou"], plantesAssociees: ["carotte", "haricot_vert", "tomate"] },
+    { id: "carotte", nom: "Carotte", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Mars - Juillet", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 6, joursMaturation: 80, distanceMin: 10, descriptionRole: "Sensible à la mouche de la carotte.", vulnerabilites: ["mouche de la carotte"], plantesAssociees: ["tomate", "laitue", "haricot_vert", "oignon", "radis", "petit_pois"] },
+    { id: "basilic", nom: "Basilic", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 30, distanceMin: 20, descriptionRole: "Stimule la croissance de la tomate et éloigne le mildiou.", vulnerabilites: [], plantesAssociees: ["tomate", "courgettes"] },
+    { id: "oeillet_inde", nom: "Œillet d'Inde", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Avril", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 50, distanceMin: 15, descriptionRole: "🛡️ Fleur protectrice contre les pucerons et nématodes.", vulnerabilites: [], plantesAssociees: ["tomate", "courgettes"] },
+    { id: "bourrache", nom: "Bourrache", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 45, distanceMin: 30, descriptionRole: "🐝 Fleur mellifère attirant les insectes pollinisateurs.", vulnerabilites: [], plantesAssociees: ["courgettes", "tomate", "concombre"] },
+    { id: "radis", nom: "Radis", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Mars - Septembre", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 8, joursMaturation: 25, distanceMin: 5, descriptionRole: "Culture ultra-rapide, idéale pour marquer les rangs et optimiser l'espace en attendant les légumes plus lents.", vulnerabilites: [], plantesAssociees: ["carotte", "laitue"] },
+    { id: "oignon", nom: "Oignon", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Février - Avril", repiquage: "Avril - Mai", moisMiseEnTerre: 3, moisMax: 4, joursMaturation: 120, distanceMin: 10, descriptionRole: "🛡️ Son odeur brouille le repérage olfactif de la mouche de la carotte, protection réciproque classique.", vulnerabilites: ["mouche de l'oignon"], plantesAssociees: ["carotte", "laitue"] },
+    { id: "betterave", nom: "Betterave", categorie: CATEGORIES.LEGUME_RACINE, besoinSoleil: "SUD", semis: "Avril - Juin", repiquage: "Semis direct", moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 90, distanceMin: 15, descriptionRole: "Racine peu exigeante qui valorise bien les cases de petite taille.", vulnerabilites: [], plantesAssociees: [] },
+    { id: "epinard", nom: "Épinard", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Mars - Septembre", repiquage: "Semis direct", moisMiseEnTerre: 2, moisMax: 8, joursMaturation: 40, distanceMin: 15, descriptionRole: "Feuille rustique appréciant la mi-ombre des légumes plus hauts.", vulnerabilites: ["mildiou"], plantesAssociees: [] },
+    { id: "poivron", nom: "Poivron", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Février - Mars", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 40, descriptionRole: "Comme la tomate, apprécie la présence du basilic à proximité.", vulnerabilites: ["cul noir", "pucerons"], plantesAssociees: ["basilic"] },
+    { id: "concombre", nom: "Concombre", categorie: CATEGORIES.LEGUME_FRUIT, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 65, distanceMin: 40, descriptionRole: "Bénéficie lui aussi des pollinisateurs attirés par la bourrache.", vulnerabilites: ["oïdium"], plantesAssociees: ["bourrache", "capucine"] },
+    { id: "petit_pois", nom: "Petit Pois", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "MI_OMBRE", semis: "Février - Avril", repiquage: "Semis direct", moisMiseEnTerre: 1, moisMax: 3, joursMaturation: 70, distanceMin: 8, descriptionRole: "Comme le haricot, fixe l'azote de l'air et enrichit le sol pour ses voisins.", vulnerabilites: ["pucerons"], plantesAssociees: ["carotte", "laitue"] },
+    { id: "persil", nom: "Persil", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE", semis: "Mars - Juin", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 70, distanceMin: 15, descriptionRole: "Attire des insectes auxiliaires utiles et se glisse facilement en bordure de case.", vulnerabilites: [], plantesAssociees: ["tomate"] },
+    { id: "capucine", nom: "Capucine", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Avril - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 25, descriptionRole: "🛡️ Plante-piège : attire les pucerons sur elle plutôt que sur les légumes voisins.", vulnerabilites: ["pucerons"], plantesAssociees: ["courgettes", "concombre"] },
+    { id: "souci", nom: "Souci (Calendula)", categorie: CATEGORIES.FLEUR_AMIE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 20, descriptionRole: "🛡️ Fleur comestible répulsive contre nématodes et pucerons, très mellifère.", vulnerabilites: [], plantesAssociees: ["tomate", "carotte"] },
+    { id: "chou_kale", nom: "Chou Kale", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 65, distanceMin: 40, descriptionRole: "Feuille robuste résistante au froid.", vulnerabilites: ["chenilles", "pucerons"], plantesAssociees: [] },
+    { id: "blette", nom: "Blette", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "MI_OMBRE", semis: "Avril - Juin", repiquage: "Mai - Juillet", moisMiseEnTerre: 4, moisMax: 6, joursMaturation: 55, distanceMin: 30, descriptionRole: "Récolte étalée sur plusieurs mois.", vulnerabilites: ["limaces"], plantesAssociees: [] },
+    { id: "chou_fleur", nom: "Chou-fleur", categorie: CATEGORIES.LEGUME_FEUILLE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai - Juin", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 100, distanceMin: 45, descriptionRole: "Gourmand, à isoler des autres brassicacées.", vulnerabilites: ["chenilles"], plantesAssociees: [] },
+    { id: "feve", nom: "Fève", categorie: CATEGORIES.LEGUMINEUSE, besoinSoleil: "SUD", semis: "Février - Avril", repiquage: "Semis direct", moisMiseEnTerre: 1, moisMax: 3, joursMaturation: 90, distanceMin: 20, descriptionRole: "Fixe l'azote, résiste au froid.", vulnerabilites: ["pucerons"], plantesAssociees: [] },
+    { id: "ciboulette", nom: "Ciboulette", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "MI_OMBRE", semis: "Mars - Mai", repiquage: "Avril - Juin", moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 60, distanceMin: 15, descriptionRole: "🛡️ Éloigne pucerons, vivace facile.", vulnerabilites: [], plantesAssociees: ["carotte"] },
+    { id: "thym", nom: "Thym", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 20, descriptionRole: "Vivace méditerranéenne, peu d'arrosage.", vulnerabilites: [], plantesAssociees: [] },
 ];
 
 const MATRICE_ASSOCIATIONS = {
@@ -565,17 +493,24 @@ function renderPlantes() {
     container.innerHTML = "";
 
     let liste = (filter === "TOUS" || !filter) ? plantes : plantes.filter(p => p.categorie === filter);
+    const parCategorie = {};
+    liste.forEach(p => { (parCategorie[p.categorie] = parCategorie[p.categorie] || []).push(p); });
 
-    liste.forEach(p => {
+    Object.entries(parCategorie).forEach(([cat, items]) => {
         container.innerHTML += `
-            <div class="item-card">
-                <h4>🌱 ${p.nom}</h4>
-                <p><strong>Catégorie :</strong> ${p.categorie}</p>
-                <p><strong>Espacement requis :</strong> ${p.distanceMin} cm</p>
-                <p><small>${p.descriptionRole}</small></p>
-                ${p.vulnerabilites?.length ? `<p><small>⚠️ Sensible à : ${p.vulnerabilites.join(", ")}</small></p>` : ""}
-                <button class="btn-primary" onclick="ouvrirAssistantPlantation('${p.id}')">⚡ Planter & Associer</button>
-            </div>`;
+            <details style="grid-column:1/-1; margin-bottom:8px;">
+                <summary style="cursor:pointer; font-weight:bold; padding:8px; background:#f1f8e9; border-radius:4px;">${cat} (${items.length})</summary>
+                <div class="grid-list" style="margin-top:10px;">
+                    ${items.map(p => `
+                        <div class="item-card">
+                            <h4>🌱 ${p.nom}</h4>
+                            <p><strong>Espacement requis :</strong> ${p.distanceMin} cm</p>
+                            <p><small>${p.descriptionRole}</small></p>
+                            ${p.vulnerabilites?.length ? `<p><small>⚠️ Sensible à : ${p.vulnerabilites.join(", ")}</small></p>` : ""}
+                            <button class="btn-primary" onclick="ouvrirAssistantPlantation('${p.id}')">⚡ Planter & Associer</button>
+                        </div>`).join("")}
+                </div>
+            </details>`;
     });
 }
 
