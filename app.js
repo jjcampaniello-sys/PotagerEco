@@ -842,8 +842,7 @@ if (bandeauDiv) {
                 <p>🌡️ Moy. min/max : ${moyenne(daily.temperature_2m_min).toFixed(1)}°C / ${moyenne(daily.temperature_2m_max).toFixed(1)}°C</p>
                 <p>🌧️ Cumul pluie : ${daily.precipitation_sum.reduce((a, b) => a + b, 0).toFixed(1)} mm ${humiditeMoy !== null ? `| 💦 Humidité moy. : ${humiditeMoy}%` : ""}</p>
             </div>`;
-
-        cardsDiv.innerHTML = carteTendance + daily.time.map((dateStr, index) => {
+const cardsJours = daily.time.map((dateStr, index) => {
             const tMax = daily.temperature_2m_max[index];
             const tMin = daily.temperature_2m_min[index];
             const pluie = daily.precipitation_sum[index];
@@ -890,6 +889,12 @@ if (bandeauDiv) {
                 </div>
             `;
         }).join('');
+
+        cardsDiv.innerHTML = carteTendance + `
+            <details style="margin-top:10px;">
+                <summary style="cursor:pointer; font-weight:bold; padding:8px; background:#f1f8e9; border-radius:4px;">📅 Prévisions jour par jour (${daily.time.length} jours)</summary>
+                <div class="grid-list" style="margin-top:10px;">${cardsJours}</div>
+            </details>`;
 
     } catch (error) {
         console.error("Erreur météo :", error);
