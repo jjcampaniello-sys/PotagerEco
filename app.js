@@ -23,9 +23,11 @@ this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
     placerPlanteCase(indexCase, idPlante) {
         if (indexCase >= 0 && indexCase < this.grille.length) {
             this.grille[indexCase] = {
-                idPlante: idPlante,
-                datePlantation: new Date().toISOString().split('T')[0]
-            };
+    idPlante: idPlante,
+    datePlantation: new Date().toISOString().split('T')[0],
+    degresJoursAccumules: 0,
+    derniereMajGDD: null
+};
         }
     }
 
@@ -684,9 +686,12 @@ function renderCalendrier() {
     const infoPlante = plantes.find(p => p.id === caseItem.idPlante);
     if (infoPlante) {
         const datePlantee = new Date(caseItem.datePlantation);
-        const dateRecolte = new Date(datePlantee);
-        dateRecolte.setDate(dateRecolte.getDate() + (infoPlante.joursMaturation || 60) + decalage);
-
+        const requis = infoPlante.degresJoursRequis || 1000;
+const accumules = Math.round(caseItem.degresJoursAccumules || 0);
+const pourcentage = Math.min(100, Math.round((accumules / requis) * 100));
+const messageAlerteOuRecolte = pourcentage >= 100
+    ? `<span style="color:#2e7d32;"><strong>🌾 Prête à récolter !</strong> (planté le ${datePlantee.toLocaleDateString('fr-FR')})</span>`
+    : `<span style="color:#2e7d32;"><strong>🌱 Croissance :</strong> ${pourcentage}% (${accumules}/${requis} °j) — planté le ${datePlantee.toLocaleDateString('fr-FR')}</span>`;
         const messageAlerteOuRecolte = `<span style="color:#2e7d32;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolte.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} (planté le ${datePlantee.toLocaleDateString('fr-FR')})</span>`;
 
         container.innerHTML += `
@@ -806,6 +811,8 @@ async function chargerMeteoEtAlertes() {
 
         const data = await response.json();
         const daily = data.daily;
+        accumulerDegresJours(daily.temperature_2m_max[0], daily.temperature_2m_min[0]);
+renderCalendrier();
 window.dernieresDonneesMeteoJour = daily;
         statusDiv.innerHTML = `📍 Zone localisée (Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)})`;
 
@@ -900,6 +907,23 @@ const cardsJours = daily.time.map((dateStr, index) => {
         console.error("Erreur météo :", error);
         statusDiv.innerHTML = `<span style="color:#c62828;">❌ Impossible d'accéder aux prévisions météo.</span>`;
     }
+}
+function accumulerDegresJours(tMax, tMin) {
+    const aujourdhui = new Date().toISOString().split('T')[0];
+    const tMoyenne = (tMax + tMin) / 2;
+    let modifie = false;
+    carres.forEach(c => {
+        c.grille.forEach(item => {
+            if (!item) return;
+            if (item.derniereMajGDD === aujourdhui) return; // déjà compté aujourd'hui
+            const plante = plantes.find(p => p.id === item.idPlante);
+            const base = plante?.tempBase ?? 10;
+            item.degresJoursAccumules = (item.degresJoursAccumules || 0) + Math.max(0, tMoyenne - base);
+            item.derniereMajGDD = aujourdhui;
+            modifie = true;
+        });
+    });
+    if (modifie) sauvegarderDonnees();
 }
 function afficherAlertesPlante(planteId) {
     const plante = plantes.find(p => p.id === planteId);
