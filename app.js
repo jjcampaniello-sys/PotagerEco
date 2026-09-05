@@ -678,9 +678,17 @@ function renderCalendrier() {
         return;
     }
 
+    const decalage = window.zoneClimatiqueActuelle.decalageJours;
+    const moisCourant = new Date().getMonth();
+    const decalageMois = Math.round(decalage / 30);
+
     plantationsReelles.forEach(caseItem => {
         const infoPlante = plantes.find(p => p.id === caseItem.idPlante);
         if (!infoPlante) return;
+
+        const moisMinAjuste = infoPlante.moisMiseEnTerre + decalageMois;
+        const moisMaxAjuste = infoPlante.moisMax + decalageMois;
+        const horsSaison = moisCourant < moisMinAjuste || moisCourant > moisMaxAjuste;
 
         const datePlantee = new Date(caseItem.datePlantation);
         const requis = infoPlante.degresJoursRequis || 1000;
@@ -695,6 +703,7 @@ function renderCalendrier() {
                 <h4>🌱 ${infoPlante.nom}</h4>
                 <p><strong>Période de semis :</strong> ${infoPlante.semis}</p>
                 <p><strong>Période de repiquage :</strong> ${infoPlante.repiquage}</p>
+                ${horsSaison ? `<p style="color:#c62828;">⚠️ Hors saison habituelle de mise en terre (ajustée à votre climat).</p>` : ""}
                 <p>${messageAlerteOuRecolte}</p>
             </div>
         `;
