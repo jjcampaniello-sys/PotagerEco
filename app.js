@@ -239,6 +239,7 @@ function sauvegarderDonnees() {
     localStorage.setItem("potager_carres_v10", JSON.stringify(carres));
     localStorage.setItem("potager_plantes_v10", JSON.stringify(plantes));
     localStorage.setItem("potager_zone_climatique_v10", JSON.stringify(window.zoneClimatiqueActuelle));
+    localStorage.setItem("potager_matrice_v10", JSON.stringify(MATRICE_ASSOCIATIONS));
 }
 
 function chargerDonneesStockees() {
@@ -260,7 +261,14 @@ function chargerDonneesStockees() {
 }).concat(nouvellesDuCatalogue);
     }
     if (zoneStockee) window.zoneClimatiqueActuelle = JSON.parse(zoneStockee);
-
+    
+const matriceStockee = localStorage.getItem("potager_matrice_v10");
+if (matriceStockee) {
+    const matriceSauvegardee = JSON.parse(matriceStockee);
+    Object.keys(matriceSauvegardee).forEach(id => {
+        MATRICE_ASSOCIATIONS[id] = { ...(MATRICE_ASSOCIATIONS[id] || {}), ...matriceSauvegardee[id] };
+    });
+}
     if (carresStockes) {
         const donneesBrutes = JSON.parse(carresStockes);
         carres = donneesBrutes.map(c => {
@@ -872,7 +880,28 @@ window.dernieresDonneesMeteoJour = daily;
         // être "diluée" par deux jours doux dans une moyenne).
         const moyenne = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
         const humiditeMoy = daily.relative_humidity_2m_mean ? Math.round(moyenne(daily.relative_humidity_2m_mean)) : null;
-        const carteTendance = `
+        const bandeauDiv = document.getElementById("bandeau-alertes-anticipees");
+if (bandeauDiv) {
+    const alertesFutures = [];
+    daily.time.forEach((dateStr, index) => {
+        if (index === 0) return; // aujourd'hui déjà visible sur la 1ère carte
+        const a = evaluerAlertesMeteo(
+            daily.temperature_2m_max[index], daily.temperature_2m_min[index],
+            daily.precipitation_sum[index],
+            daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[index] : null,
+            daily.windspeed_10m_max ? daily.windspeed_10m_max[index] : 0
+        );
+        a.forEach(al => alertesFutures.push({ jour: index, id: al.id, html: al.html }));
+    });
+    const PRIORITAIRES = ["gelee", "canicule", "vent"];
+    const critiques = alertesFutures.filter(a => PRIORITAIRES.includes(a.id));
+    bandeauDiv.innerHTML = critiques.length
+        ? `<div class="item-card" style="border-left:5px solid #c62828; background:#fff3f3; margin-bottom:15px;">
+            ${critiques.map(a => `<p>⚠️ <strong>J+${a.jour} :</strong> ${a.html.split("<br>")[0]}</p>`).join("")}
+           </div>`
+        : "";
+}
+        const carteTendance = `   
             <div class="item-card" style="border-left: 5px solid #1565c0; background:#f0f6ff;">
                 <h4>📊 Tendance sur 3 jours</h4>
                 <p>🌡️ Moy. min/max : ${moyenne(daily.temperature_2m_min).toFixed(1)}°C / ${moyenne(daily.temperature_2m_max).toFixed(1)}°C</p>
@@ -955,6 +984,24 @@ function afficherAlertesPlante(planteId) {
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.innerHTML = `<div class="modal-box"><h3>⚠️ ${plante.nom}</h3><p>${conseils.join("</p><p>")}</p>
+    <hr>
+<h4>➕ Ajouter une association</h4>
+<select id="assoc-autre-plante">${plantes.filter(x=>x.id!==plante.id).map(x=>`<option value="${x.id}">${x.nom}</option>`).join("")}</select>
+<select id="assoc-type"><option value="PROTECTION_SANITAIRE">🛡️ Protection</option><option value="POLLINISATION">🐝 Pollinisation</option><option value="COMPAGNONNAGE_DIRECT">🤝 Compagnonnage</option><option value="INCOMPATIBILITE">⚠️ Incompatibilité</option></select>
+<input type="text" id="assoc-distance" placeholder="Distance idéale (ex: 20-25 cm)">
+<input type="text" id="assoc-conseil" placeholder="Conseil">
+<button onclick="ajouterAssociationManuelle('${plante.id}')">Enregistrer</button>
         <button onclick="this.closest('.modal-overlay').remove()">Fermer</button></div>`;
     document.body.appendChild(overlay);
+}
+function ajouterAssociationManuelle(planteId) {
+    const autreId = document.getElementById("assoc-autre-plante").value;
+    const type = document.getElementById("assoc-type").value;
+    const distance = document.getElementById("assoc-distance").value.trim() || "à préciser";
+    const conseil = document.getElementById("assoc-conseil").value.trim() || "Association ajoutée manuellement.";
+    MATRICE_ASSOCIATIONS[planteId] = MATRICE_ASSOCIATIONS[planteId] || {};
+    MATRICE_ASSOCIATIONS[planteId][autreId] = { type, distance, conseil };
+    sauvegarderDonnees();
+    document.querySelector(".modal-overlay")?.remove();
+    alert("Association enregistrée.");
 }
