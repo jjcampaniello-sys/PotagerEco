@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À propos — Mon Potager en Lasagne</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>🌱 Mon Potager en Lasagne</h1>
+        <p>Documentation du projet</p>
+    </header>
+    <main class="container">
+        <section class="card">
+            <h2>Fonctionnalités</h2>
+            <ul>
+                <li><strong>Carrés adaptatifs</strong> : grille dynamique (2×2 à 5×5) selon les dimensions réelles et l'espacement optimal des plantes.</li>
+                <li><strong>Catalogue de plantes</strong> : 25+ plantes avec semis, repiquage, vulnérabilités, associations — extensible, classé par menu déroulant.</li>
+                <li><strong>Assistant de plantation</strong> : ensoleillement, espacement minimal, associations bénéfiques/incompatibles (enrichissables depuis l'interface).</li>
+                <li><strong>Calendrier de récolte</strong> : estimation par degrés-jours de croissance (GDD), propre à chaque plante et sa météo réelle.</li>
+                <li><strong>Météo à 3 jours</strong> : températures, pluie, humidité, vent, bandeau d'alerte anticipée, recommandations personnalisées.</li>
+                <li><strong>Zone climatique</strong> : ajustement automatique selon la latitude détectée.</li>
+            </ul>
+        </section>
+        <section class="card">
+            <h2>Stockage</h2>
+            <p>Toutes les données sont sauvegardées dans le <code>localStorage</code> du navigateur — aucun serveur, aucune donnée envoyée ailleurs que vers l'API météo Open-Meteo (position GPS uniquement).</p>
+        </section>
+        <section class="card">
+            <h2>Fichiers</h2>
+            <ul>
+                <li><code>index.html</code> — structure de la page</li>
+                <li><code>app.js</code> — logique complète de l'application</li>
+                <li><code>style.css</code> — mise en forme</li>
+            </ul>
+        </section>
+        <p><a href="index.html">← Retour à l'application</a></p>
+    </main>
+</body>
+</html>
