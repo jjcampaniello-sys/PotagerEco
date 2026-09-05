@@ -10,9 +10,9 @@ class CarrePotager {
         this.hauteur = Number(hauteur);
         this.exposition = exposition;
         const ratio = this.longueur / this.largeur;
-this.nbColonnes = Math.min(5, Math.max(2, Math.round(3 * Math.sqrt(ratio))));
-this.nbLignes = Math.min(5, Math.max(2, Math.round(3 / Math.sqrt(ratio))));
-this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
+        this.nbColonnes = Math.min(5, Math.max(2, Math.round(3 * Math.sqrt(ratio))));
+        this.nbLignes = Math.min(5, Math.max(2, Math.round(3 / Math.sqrt(ratio))));
+        this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
         this.latitude = latitude;
         this.longitude = longitude;
     }
@@ -23,11 +23,11 @@ this.grille = Array(this.nbColonnes * this.nbLignes).fill(null);
     placerPlanteCase(indexCase, idPlante) {
         if (indexCase >= 0 && indexCase < this.grille.length) {
             this.grille[indexCase] = {
-    idPlante: idPlante,
-    datePlantation: new Date().toISOString().split('T')[0],
-    degresJoursAccumules: 0,
-    derniereMajGDD: null
-};
+                idPlante: idPlante,
+                datePlantation: new Date().toISOString().split('T')[0],
+                degresJoursAccumules: 0,
+                derniereMajGDD: null
+            };
         }
     }
 
@@ -82,6 +82,71 @@ const catalogueInitial = [
     { id: "thym", nom: "Thym", categorie: CATEGORIES.AROMATIQUE, besoinSoleil: "SUD", semis: "Mars - Mai", repiquage: "Mai", moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 90, distanceMin: 20, descriptionRole: "Vivace méditerranéenne, peu d'arrosage.", vulnerabilites: [], plantesAssociees: [], tempBase: 8, degresJoursRequis: 900 },
 ];
 
+const MATRICE_ASSOCIATIONS = {
+    tomate: {
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ L'Œillet d'Inde repousse les nématodes du sol et les pucerons." },
+        basilic: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Le basilic stimule la pousse de la tomate, améliore sa saveur et éloigne le mildiou." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot fixe l'azote de l'air pour fertiliser le pied de tomate." },
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🤝 Bon compagnonnage racinaire : l'enracinement profond de la carotte n'entre pas en conflit avec la tomate." }
+    },
+    courgettes: {
+        bourrache: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 La Bourrache attire massivement les abeilles nécessaires à la pollinisation des fleurs de courgette." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "30-35 cm", conseil: "🌿 Le haricot enrichit le sol en azote, profitant au feuillage gourmand de la courgette." },
+        oeillet_inde: { type: "PROTECTION_SANITAIRE", distance: "20-25 cm", conseil: "🛡️ Aide à limiter la pression des pucerons sur les jeunes pousses." }
+    },
+    haricot_vert: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "25-30 cm", conseil: "🌿 Le haricot fournit de l'azote naturel utilisable par la tomate." },
+        courgettes: { type: "COMPAGNONNAGE_DIRECT", distance: "30-35 cm", conseil: "🌿 Synergie idéale : enrichit la terre en azote pour la courgette." },
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Association classique du potager : la carotte profite de l'azote du haricot." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🥬 La laitue s'épanouit au pied des haricots sans gêner leurs racines." }
+    },
+    laitue: {
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Les racines superficielles de la salade ne gênent pas le développement bulbeux de la carotte." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🥬 Profite de l'azote fixé par les fabacées et de leur ombre légère." },
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "⛱️ Profite de l'ombrage tamisé du feuillage de la tomate pendant les chaudes journées." }
+    },
+    carotte: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🤝 Occupation optimale du sol : occupation racinaire à des profondeurs différentes." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Bon gain d'espace : récolte rapide de la laitue libérant l'espace pour la carotte." },
+        haricot_vert: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🌿 Bénéficie de la fertilisation azotée naturelle apportée par le haricot." }
+    },
+    basilic: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "20-25 cm", conseil: "🚀 Alliance phare du potager : amélioration gustative et répulsif anti-moustiques/mouches." },
+        courgettes: { type: "PROTECTION_SANITAIRE", distance: "20-25 cm", conseil: "🛡️ Son parfum fort masque les plantes et repousse certains nuisibles." }
+    },
+    oeillet_inde: {
+        tomate: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ Protection bio efficace contre les nématodes racinaires." },
+        courgettes: { type: "PROTECTION_SANITAIRE", distance: "20-25 cm", conseil: "🛡️ Éloigne les altises et pucerons du feuillage." }
+    },
+    bourrache: {
+        courgettes: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Plante mellifère majeure augmentant le rendement des courgettes." },
+        tomate: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Attire les pollinisateurs et repousse le sphinx de la tomate." },
+        concombre: { type: "POLLINISATION", distance: "25-30 cm", conseil: "🐝 Améliore la pollinisation des fleurs de concombre." }
+    },
+    oignon: {
+        carotte: { type: "PROTECTION_SANITAIRE", distance: "10-15 cm", conseil: "🛡️ Association réciproque classique : l'oignon brouille la mouche de la carotte, et inversement la carotte perturbe la mouche de l'oignon." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "10-15 cm", conseil: "🤝 L'oignon pousse en hauteur pendant que la laitue occupe le sol en surface." }
+    },
+    radis: {
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "5-10 cm", conseil: "🤝 Le radis, récolté en 3-4 semaines, marque le rang et libère vite la place pour la carotte plus lente." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "10-15 cm", conseil: "🤝 Deux cultures rapides qui optimisent l'espace en attendant les légumes plus longs." }
+    },
+    capucine: {
+        courgettes: { type: "PROTECTION_SANITAIRE", distance: "25-30 cm", conseil: "🛡️ Plante-piège : concentre les pucerons loin des courgettes." },
+        concombre: { type: "PROTECTION_SANITAIRE", distance: "25-30 cm", conseil: "🛡️ Détourne les pucerons et attire des auxiliaires pollinisateurs." }
+    },
+    souci: {
+        tomate: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ Répulsif reconnu contre les nématodes du sol, en complément de l'œillet d'Inde." },
+        carotte: { type: "PROTECTION_SANITAIRE", distance: "15-20 cm", conseil: "🛡️ Aide à limiter la pression des nématodes autour des racines." }
+    },
+    petit_pois: {
+        carotte: { type: "COMPAGNONNAGE_DIRECT", distance: "8-12 cm", conseil: "🌿 Comme le haricot, fixe l'azote de l'air et profite à la carotte voisine." },
+        laitue: { type: "COMPAGNONNAGE_DIRECT", distance: "8-12 cm", conseil: "🥬 La laitue profite de l'ombre légère et de l'azote apporté par les petits pois." }
+    },
+    persil: {
+        tomate: { type: "COMPAGNONNAGE_DIRECT", distance: "15-20 cm", conseil: "🤝 Association traditionnelle : le persil profite de l'ombrage léger de la tomate et attire des insectes auxiliaires." }
+    }
+};
 
 let carres = [];
 let plantes = [...catalogueInitial];
@@ -91,8 +156,7 @@ window.zoneClimatiqueActuelle = { nom: "Standard", decalageJours: 0, latitude: n
 const TAILLE_CASE_PAR_DEFAUT_CM = 25;
 // Facteur unique de compression "culture intensive en carré" (-25% vs pleine
 // terre), réutilisé partout où un espacement de plante est affiché ou
-// vérifié, pour que la grille, l'infobulle et l'assistant d'association
-// racontent toujours le même chiffre.
+// vérifié.
 const FACTEUR_INTENSIF_CARRE = 0.75;
 
 // =================================================================
@@ -114,32 +178,29 @@ function chargerDonneesStockees() {
     if (plantesStockees) {
         const plantesSauvegardees = JSON.parse(plantesStockees);
         const idsSauvegardes = new Set(plantesSauvegardees.map(p => p.id));
-        // Fusion : on garde les plantes du stock (y compris ajouts manuels)
-        // et on rajoute les plantes du catalogue de base absentes du stock,
-        // sinon toute nouvelle plante ajoutée au code restait invisible dès
-        // qu'un navigateur avait déjà une sauvegarde locale.
         const nouvellesDuCatalogue = catalogueInitial.filter(p => !idsSauvegardes.has(p.id));
         plantes = plantesSauvegardees.map(p => {
-    const ref = catalogueInitial.find(c => c.id === p.id);
-    return ref ? { ...ref, ...p } : p;
-}).concat(nouvellesDuCatalogue);
+            const ref = catalogueInitial.find(c => c.id === p.id);
+            return ref ? { ...ref, ...p } : p;
+        }).concat(nouvellesDuCatalogue);
     }
     if (zoneStockee) window.zoneClimatiqueActuelle = JSON.parse(zoneStockee);
-    
-const matriceStockee = localStorage.getItem("potager_matrice_v10");
-if (matriceStockee) {
-    const matriceSauvegardee = JSON.parse(matriceStockee);
-    Object.keys(matriceSauvegardee).forEach(id => {
-        MATRICE_ASSOCIATIONS[id] = { ...(MATRICE_ASSOCIATIONS[id] || {}), ...matriceSauvegardee[id] };
-    });
-}
+
+    const matriceStockee = localStorage.getItem("potager_matrice_v10");
+    if (matriceStockee) {
+        const matriceSauvegardee = JSON.parse(matriceStockee);
+        Object.keys(matriceSauvegardee).forEach(id => {
+            MATRICE_ASSOCIATIONS[id] = { ...(MATRICE_ASSOCIATIONS[id] || {}), ...matriceSauvegardee[id] };
+        });
+    }
+
     if (carresStockes) {
         const donneesBrutes = JSON.parse(carresStockes);
         carres = donneesBrutes.map(c => {
             const carre = new CarrePotager(c.id, c.longueur, c.largeur, c.hauteur, c.exposition, c.latitude, c.longitude);
             carre.grille = c.grille || Array((c.nbColonnes || 3) * (c.nbLignes || 3)).fill(null);
-carre.nbColonnes = c.nbColonnes || 3;
-carre.nbLignes = c.nbLignes || 3;
+            carre.nbColonnes = c.nbColonnes || 3;
+            carre.nbLignes = c.nbLignes || 3;
             return carre;
         });
     }
@@ -152,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPlantes();
     renderCalendrier();
     afficherStatutZoneClimatique();
-    chargerMeteoEtAlertes(); // Chargement de la météo au lancement
+    chargerMeteoEtAlertes();
 
     document.getElementById("form-carre")?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -205,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const repiquage = document.getElementById("p-repiquage").value.trim() || "À préciser";
         const associees = document.getElementById("p-associees").value.trim()
             .split(",").map(s => s.trim()).filter(Boolean);
-  
+
         const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "_");
 
         if (plantes.some(p => p.id === id)) {
@@ -213,25 +274,22 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Valeurs par défaut déduites de la catégorie plutôt que fixes pour
-        // toutes les plantes ajoutées à la main (une racine n'a pas les
-        // mêmes besoins qu'un fruit) — l'utilisateur peut toujours corriger
-        // ensuite depuis la fiche plante.
         const DEFAUTS_PAR_CATEGORIE = {
-            [CATEGORIES.LEGUME_FRUIT]:   { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 70, distanceMin: 40 },
-            [CATEGORIES.LEGUME_FEUILLE]: { moisMiseEnTerre: 3, moisMax: 6, joursMaturation: 45, distanceMin: 25 },
-            [CATEGORIES.LEGUME_RACINE]:  { moisMiseEnTerre: 2, moisMax: 6, joursMaturation: 80, distanceMin: 12 },
-            [CATEGORIES.LEGUMINEUSE]:    { moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 65, distanceMin: 15 },
-            [CATEGORIES.AROMATIQUE]:     { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 18 },
-            [CATEGORIES.FLEUR_AMIE]:     { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 22 }
+            [CATEGORIES.LEGUME_FRUIT]:   { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 70, distanceMin: 40, tempBase: 10, degresJoursRequis: 1000 },
+            [CATEGORIES.LEGUME_FEUILLE]: { moisMiseEnTerre: 3, moisMax: 6, joursMaturation: 45, distanceMin: 25, tempBase: 5, degresJoursRequis: 500 },
+            [CATEGORIES.LEGUME_RACINE]:  { moisMiseEnTerre: 2, moisMax: 6, joursMaturation: 80, distanceMin: 12, tempBase: 6, degresJoursRequis: 900 },
+            [CATEGORIES.LEGUMINEUSE]:    { moisMiseEnTerre: 3, moisMax: 5, joursMaturation: 65, distanceMin: 15, tempBase: 6, degresJoursRequis: 700 },
+            [CATEGORIES.AROMATIQUE]:     { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 18, tempBase: 7, degresJoursRequis: 650 },
+            [CATEGORIES.FLEUR_AMIE]:     { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 55, distanceMin: 22, tempBase: 7, degresJoursRequis: 600 }
         };
-        const defauts = DEFAUTS_PAR_CATEGORIE[categorie] || { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 30 };
+        const defauts = DEFAUTS_PAR_CATEGORIE[categorie] || { moisMiseEnTerre: 4, moisMax: 5, joursMaturation: 60, distanceMin: 30, tempBase: 10, degresJoursRequis: 800 };
 
         plantes.push({
             id, nom, categorie, besoinSoleil,
             semis, repiquage,
             ...defauts,
             descriptionRole: "Plante ajoutée manuellement au catalogue.",
+            vulnerabilites: [],
             plantesAssociees: associees
         });
 
@@ -340,7 +398,8 @@ function calculerPoidsGrille(carre) {
 function calculerDistanceEntreCases(carre, index1, index2) {
     const { poidsColonnes, poidsLignes } = calculerPoidsGrille(carre);
     const x1 = index1 % carre.nbColonnes, y1 = Math.floor(index1 / carre.nbColonnes);
-const x2 = index2 % carre.nbColonnes, y2 = Math.floor(index2 / carre.nbColonnes);
+    const x2 = index2 % carre.nbColonnes, y2 = Math.floor(index2 / carre.nbColonnes);
+
     let dx = 0;
     for (let c = Math.min(x1, x2); c < Math.max(x1, x2); c++) {
         dx += (poidsColonnes[c] + poidsColonnes[c + 1]) / 2;
@@ -505,11 +564,11 @@ function analyserCompatibilite(planteId) {
     const [carreId, caseIndex] = select.value.split("-").map(Number);
     const carre = carres.find(c => c.id === carreId);
     const planteActuelle = plantes.find(p => p.id === planteId);
-   const HEURES_SOLEIL_PAR_EXPOSITION = { SUD: 8, "SUD-EST": 6, "SUD-OUEST": 6, EST: 5, OUEST: 5, NORD: 2 };
+    const HEURES_SOLEIL_PAR_EXPOSITION = { SUD: 8, "SUD-EST": 6, "SUD-OUEST": 6, EST: 5, OUEST: 5, NORD: 2 };
     let conseils = [];
     const heuresDispo = HEURES_SOLEIL_PAR_EXPOSITION[carre.exposition] ?? 4;
-const heuresRequises = planteActuelle?.besoinSoleil === "SUD" ? 6 : 3;
-if (heuresDispo < heuresRequises) conseils.push(`<span style="color:#c62828;">☀️ ${planteActuelle.nom} a besoin d'~${heuresRequises}h de soleil/j, ce carré (${carre.exposition}) en reçoit ~${heuresDispo}h.</span>`);
+    const heuresRequises = planteActuelle?.besoinSoleil === "SUD" ? 6 : 3;
+    if (heuresDispo < heuresRequises) conseils.push(`<span style="color:#c62828;">☀️ ${planteActuelle.nom} a besoin d'~${heuresRequises}h de soleil/j, ce carré (${carre.exposition}) en reçoit ~${heuresDispo}h.</span>`);
 
     carre.grille.forEach((voisin, idxVoisin) => {
         if (voisin && idxVoisin !== caseIndex) {
@@ -519,9 +578,6 @@ if (heuresDispo < heuresRequises) conseils.push(`<span style="color:#c62828;">�
 
             let regle = MATRICE_ASSOCIATIONS[planteId]?.[voisin.idPlante] || MATRICE_ASSOCIATIONS[voisin.idPlante]?.[planteId];
 
-            // Associations saisies manuellement via le formulaire d'ajout de
-            // plante (champ plantesAssociees) : jusqu'ici renseignées et
-            // affichées dans la fiche plante, mais jamais utilisées ici.
             if (!regle) {
                 const associeeManuelle =
                     (planteActuelle?.plantesAssociees || []).includes(voisin.idPlante) ||
@@ -530,10 +586,10 @@ if (heuresDispo < heuresRequises) conseils.push(`<span style="color:#c62828;">�
                     regle = { type: "COMPAGNONNAGE_DIRECT", distance: "selon espacement optimal", conseil: "🤝 Association déclarée manuellement lors de l'ajout de la plante." };
                 }
                 if (!regle && planteActuelle?.categorie === planteVoisine?.categorie &&
-    (planteActuelle?.vulnerabilites || []).some(v => (planteVoisine?.vulnerabilites || []).includes(v))) {
-    const communes = planteActuelle.vulnerabilites.filter(v => planteVoisine.vulnerabilites.includes(v));
-    regle = { type: "INCOMPATIBILITE", distance: "éloigner davantage", conseil: `⚠️ Même famille et vulnérabilités communes (${communes.join(", ")}) : risque de propagation, augmentez l'espacement.` };
-}
+                    (planteActuelle?.vulnerabilites || []).some(v => (planteVoisine?.vulnerabilites || []).includes(v))) {
+                    const communes = planteActuelle.vulnerabilites.filter(v => planteVoisine.vulnerabilites.includes(v));
+                    regle = { type: "INCOMPATIBILITE", distance: "éloigner davantage", conseil: `⚠️ Même famille et vulnérabilités communes (${communes.join(", ")}) : risque de propagation, augmentez l'espacement.` };
+                }
             }
 
             let alerteEspacement = "";
@@ -572,6 +628,7 @@ function fermerAssistant() {
 function getNomPlante(id) {
     return plantes.find(p => p.id === id)?.nom || id;
 }
+
 function afficherInfoPlante(carreId, indexCase) {
     const carre = carres.find(c => c.id === carreId);
     const item = carre?.grille[indexCase];
@@ -593,8 +650,9 @@ function afficherInfoPlante(carreId, indexCase) {
         </div>`;
     document.body.appendChild(overlay);
 }
+
 // =================================================================
-// 5. CALENDRIER DE RÉCOLTE AVEC DATES COHÉRENTES
+// 5. CALENDRIER DE RÉCOLTE AVEC DATES COHÉRENTES (basé sur degrés-jours)
 // =================================================================
 
 function renderCalendrier() {
@@ -614,19 +672,17 @@ function renderCalendrier() {
         return;
     }
 
-    const decalage = window.zoneClimatiqueActuelle.decalageJours;
-
     plantationsReelles.forEach(caseItem => {
-    const infoPlante = plantes.find(p => p.id === caseItem.idPlante);
-    if (infoPlante) {
+        const infoPlante = plantes.find(p => p.id === caseItem.idPlante);
+        if (!infoPlante) return;
+
         const datePlantee = new Date(caseItem.datePlantation);
         const requis = infoPlante.degresJoursRequis || 1000;
-const accumules = Math.round(caseItem.degresJoursAccumules || 0);
-const pourcentage = Math.min(100, Math.round((accumules / requis) * 100));
-const messageAlerteOuRecolte = pourcentage >= 100
-    ? `<span style="color:#2e7d32;"><strong>🌾 Prête à récolter !</strong> (planté le ${datePlantee.toLocaleDateString('fr-FR')})</span>`
-    : `<span style="color:#2e7d32;"><strong>🌱 Croissance :</strong> ${pourcentage}% (${accumules}/${requis} °j) — planté le ${datePlantee.toLocaleDateString('fr-FR')}</span>`;
-        const messageAlerteOuRecolte = `<span style="color:#2e7d32;"><strong>🌾 Récolte estimée :</strong> ~${dateRecolte.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} (planté le ${datePlantee.toLocaleDateString('fr-FR')})</span>`;
+        const accumules = Math.round(caseItem.degresJoursAccumules || 0);
+        const pourcentage = Math.min(100, Math.round((accumules / requis) * 100));
+        const messageAlerteOuRecolte = pourcentage >= 100
+            ? `<span style="color:#2e7d32;"><strong>🌾 Prête à récolter !</strong> (planté le ${datePlantee.toLocaleDateString('fr-FR')})</span>`
+            : `<span style="color:#2e7d32;"><strong>🌱 Croissance :</strong> ${pourcentage}% (${accumules}/${requis} °j) — planté le ${datePlantee.toLocaleDateString('fr-FR')}</span>`;
 
         container.innerHTML += `
             <div class="item-card">
@@ -636,18 +692,13 @@ const messageAlerteOuRecolte = pourcentage >= 100
                 <p>${messageAlerteOuRecolte}</p>
             </div>
         `;
-    }
-});
+    });
 }
 
 // =================================================================
 // 6. MÉTÉO ET ALERTES SANITAIRES DU POTAGER
 // =================================================================
 
-// Source unique des règles d'alerte météo/sanitaires : utilisée à la fois
-// par la carte météo du jour (chargerMeteoEtAlertes) et par le détail par
-// plante (afficherAlertesPlante), pour éviter que les deux divergent comme
-// c'était le cas pour le mildiou.
 function evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent) {
     const alertes = [];
 
@@ -658,7 +709,6 @@ function evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent) {
         });
     }
 
-    // Mildiou : déclenché par la pluie OU une hygrométrie élevée.
     if ((pluie > 4 || (humidite !== null && humidite >= 80)) && tMax >= 18 && tMax <= 26) {
         alertes.push({ id: "mildiou", html:
             "⚠️ <strong>Alerte Mildiou :</strong> Humidité" + (humidite !== null ? ` (${humidite}%)` : "") + " et chaleur modérée favorisent les champignons.<br>" +
@@ -666,7 +716,6 @@ function evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent) {
         });
     }
 
-    // Oïdium : temps chaud avec air relativement sec en journée.
     if (tMax >= 22 && tMax <= 30 && pluie < 3 && (humidite === null || humidite <= 70)) {
         alertes.push({ id: "oidium", html:
             "⚪ <strong>Risque Oïdium :</strong> Temps chaud et air sec en journée avec rosée ou variations de température nocturnes.<br>" +
@@ -681,7 +730,6 @@ function evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent) {
         });
     }
 
-    // Limaces : pluie fraîche OU humidité ambiante élevée sans pluie.
     if (pluie >= 5 || (humidite !== null && humidite >= 85)) {
         alertes.push({ id: "limaces", html:
             "🐌 <strong>Alerte Limaces :</strong> L'humidité fait sortir les gastéropodes.<br>" +
@@ -713,6 +761,24 @@ function evaluerAlertesMeteo(tMax, tMin, pluie, humidite, vent) {
     return alertes;
 }
 
+function accumulerDegresJours(tMax, tMin) {
+    const aujourdhui = new Date().toISOString().split('T')[0];
+    const tMoyenne = (tMax + tMin) / 2;
+    let modifie = false;
+    carres.forEach(c => {
+        c.grille.forEach(item => {
+            if (!item) return;
+            if (item.derniereMajGDD === aujourdhui) return;
+            const plante = plantes.find(p => p.id === item.idPlante);
+            const base = plante?.tempBase ?? 10;
+            item.degresJoursAccumules = (item.degresJoursAccumules || 0) + Math.max(0, tMoyenne - base);
+            item.derniereMajGDD = aujourdhui;
+            modifie = true;
+        });
+    });
+    if (modifie) sauvegarderDonnees();
+}
+
 async function chargerMeteoEtAlertes() {
     const statusDiv = document.getElementById("meteo-status");
     const cardsDiv = document.getElementById("meteo-cards");
@@ -722,7 +788,7 @@ async function chargerMeteoEtAlertes() {
     statusDiv.innerHTML = "⏳ Analyse météo complète & calcul des risques du potager...";
     cardsDiv.innerHTML = "";
 
-    let latitude = 48.8566; 
+    let latitude = 48.8566;
     let longitude = 2.3522;
 
     if ("geolocation" in navigator) {
@@ -745,45 +811,46 @@ async function chargerMeteoEtAlertes() {
 
         const data = await response.json();
         const daily = data.daily;
+
         accumulerDegresJours(daily.temperature_2m_max[0], daily.temperature_2m_min[0]);
-renderCalendrier();
-window.dernieresDonneesMeteoJour = daily;
+        renderCalendrier();
+
+        window.dernieresDonneesMeteoJour = daily;
         statusDiv.innerHTML = `📍 Zone localisée (Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)})`;
 
-        // Tendance moyenne sur les 3 jours, affichée en complément des cartes
-        // quotidiennes (utile pour une vue d'ensemble, mais les alertes
-        // restent calculées jour par jour : une gelée le jour 3 ne doit pas
-        // être "diluée" par deux jours doux dans une moyenne).
         const moyenne = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
         const humiditeMoy = daily.relative_humidity_2m_mean ? Math.round(moyenne(daily.relative_humidity_2m_mean)) : null;
+
         const bandeauDiv = document.getElementById("bandeau-alertes-anticipees");
-if (bandeauDiv) {
-    const alertesFutures = [];
-    daily.time.forEach((dateStr, index) => {
-        if (index === 0) return; // aujourd'hui déjà visible sur la 1ère carte
-        const a = evaluerAlertesMeteo(
-            daily.temperature_2m_max[index], daily.temperature_2m_min[index],
-            daily.precipitation_sum[index],
-            daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[index] : null,
-            daily.windspeed_10m_max ? daily.windspeed_10m_max[index] : 0
-        );
-        a.forEach(al => alertesFutures.push({ jour: index, id: al.id, html: al.html }));
-    });
-    const PRIORITAIRES = ["gelee", "canicule", "vent"];
-    const critiques = alertesFutures.filter(a => PRIORITAIRES.includes(a.id));
-    bandeauDiv.innerHTML = critiques.length
-        ? `<div class="item-card" style="border-left:5px solid #c62828; background:#fff3f3; margin-bottom:15px;">
-            ${critiques.map(a => `<p>⚠️ <strong>J+${a.jour} :</strong> ${a.html.split("<br>")[0]}</p>`).join("")}
-           </div>`
-        : "";
-}
-        const carteTendance = `   
+        if (bandeauDiv) {
+            const alertesFutures = [];
+            daily.time.forEach((dateStr, index) => {
+                if (index === 0) return;
+                const a = evaluerAlertesMeteo(
+                    daily.temperature_2m_max[index], daily.temperature_2m_min[index],
+                    daily.precipitation_sum[index],
+                    daily.relative_humidity_2m_mean ? daily.relative_humidity_2m_mean[index] : null,
+                    daily.windspeed_10m_max ? daily.windspeed_10m_max[index] : 0
+                );
+                a.forEach(al => alertesFutures.push({ jour: index, id: al.id, html: al.html }));
+            });
+            const PRIORITAIRES = ["gelee", "canicule", "vent"];
+            const critiques = alertesFutures.filter(a => PRIORITAIRES.includes(a.id));
+            bandeauDiv.innerHTML = critiques.length
+                ? `<div class="item-card" style="border-left:5px solid #c62828; background:#fff3f3; margin-bottom:15px;">
+                    ${critiques.map(a => `<p>⚠️ <strong>J+${a.jour} :</strong> ${a.html.split("<br>")[0]}</p>`).join("")}
+                   </div>`
+                : "";
+        }
+
+        const carteTendance = `
             <div class="item-card" style="border-left: 5px solid #1565c0; background:#f0f6ff;">
                 <h4>📊 Tendance sur 3 jours</h4>
                 <p>🌡️ Moy. min/max : ${moyenne(daily.temperature_2m_min).toFixed(1)}°C / ${moyenne(daily.temperature_2m_max).toFixed(1)}°C</p>
                 <p>🌧️ Cumul pluie : ${daily.precipitation_sum.reduce((a, b) => a + b, 0).toFixed(1)} mm ${humiditeMoy !== null ? `| 💦 Humidité moy. : ${humiditeMoy}%` : ""}</p>
             </div>`;
-const cardsJours = daily.time.map((dateStr, index) => {
+
+        const cardsJours = daily.time.map((dateStr, index) => {
             const tMax = daily.temperature_2m_max[index];
             const tMin = daily.temperature_2m_min[index];
             const pluie = daily.precipitation_sum[index];
@@ -842,23 +909,7 @@ const cardsJours = daily.time.map((dateStr, index) => {
         statusDiv.innerHTML = `<span style="color:#c62828;">❌ Impossible d'accéder aux prévisions météo.</span>`;
     }
 }
-function accumulerDegresJours(tMax, tMin) {
-    const aujourdhui = new Date().toISOString().split('T')[0];
-    const tMoyenne = (tMax + tMin) / 2;
-    let modifie = false;
-    carres.forEach(c => {
-        c.grille.forEach(item => {
-            if (!item) return;
-            if (item.derniereMajGDD === aujourdhui) return; // déjà compté aujourd'hui
-            const plante = plantes.find(p => p.id === item.idPlante);
-            const base = plante?.tempBase ?? 10;
-            item.degresJoursAccumules = (item.degresJoursAccumules || 0) + Math.max(0, tMoyenne - base);
-            item.derniereMajGDD = aujourdhui;
-            modifie = true;
-        });
-    });
-    if (modifie) sauvegarderDonnees();
-}
+
 function afficherAlertesPlante(planteId) {
     const plante = plantes.find(p => p.id === planteId);
     const daily = window.dernieresDonneesMeteoJour;
@@ -872,26 +923,21 @@ function afficherAlertesPlante(planteId) {
         .filter(a => {
             if (a.id === "mildiou" || a.id === "oidium" || a.id === "cul_noir") return PLANTES_SENSIBLES_CHAMPIGNONS.includes(plante.id);
             if (a.id === "limaces") return plante.categorie === CATEGORIES.LEGUME_FEUILLE;
-            return true; // ravageurs, canicule, gelée, vent : pertinents pour toute plante
+            return true;
         })
         .map(a => a.html);
 
     if (plante.categorie === CATEGORIES.AROMATIQUE && pluie < 2 && tMax < 25)
         conseils.push("🌿 Arrosage minimal suffisant, évitez l'excès.");
     if (conseils.length === 0) conseils.push("🟢 Rien de spécifique aujourd'hui.");
+
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
     overlay.innerHTML = `<div class="modal-box"><h3>⚠️ ${plante.nom}</h3><p>${conseils.join("</p><p>")}</p>
-    <hr>
-<h4>➕ Ajouter une association</h4>
-<select id="assoc-autre-plante">${plantes.filter(x=>x.id!==plante.id).map(x=>`<option value="${x.id}">${x.nom}</option>`).join("")}</select>
-<select id="assoc-type"><option value="PROTECTION_SANITAIRE">🛡️ Protection</option><option value="POLLINISATION">🐝 Pollinisation</option><option value="COMPAGNONNAGE_DIRECT">🤝 Compagnonnage</option><option value="INCOMPATIBILITE">⚠️ Incompatibilité</option></select>
-<input type="text" id="assoc-distance" placeholder="Distance idéale (ex: 20-25 cm)">
-<input type="text" id="assoc-conseil" placeholder="Conseil">
-<button onclick="ajouterAssociationManuelle('${plante.id}')">Enregistrer</button>
         <button onclick="this.closest('.modal-overlay').remove()">Fermer</button></div>`;
     document.body.appendChild(overlay);
 }
+
 function ajouterAssociationManuelle(planteId) {
     const autreId = document.getElementById("assoc-autre-plante").value;
     const type = document.getElementById("assoc-type").value;
