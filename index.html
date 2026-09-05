@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionnaire Potager Écoresponsable</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2e7d32">
 </head>
 <body>
 
@@ -95,7 +97,13 @@
             <div id="calendrier-container" class="grid-list"></div>
         </section>
     </main>
-
+<script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("sw.js").catch(err => console.warn("Échec enregistrement SW:", err));
+            });
+        }
+    </script>
     <script src="app.js"></script>
     <footer style="text-align:center; margin-top:20px; font-size:12px; color:#888;">
         <a href="readme.html" style="color:#2e7d32;">ℹ️ À propos de cette application</a>
